@@ -17,7 +17,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/DaveWoodCom/XCGLogger.git", from: "7.0.1"),
-        .package(url: "https://github.com/sunshinejr/SwiftyUserDefaults.git", from: "5.0.0"),
+        .package(url: "https://github.com/sunshinejr/SwiftyUserDefaults.git", .branch("master")),
         .package(url: "https://github.com/K3TZR/xLib6000.git", from: "1.6.4"),
     ],
     targets: [

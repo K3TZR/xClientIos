@@ -6,17 +6,17 @@
         "repositoryURL": "https://github.com/robbiehanson/CocoaAsyncSocket",
         "state": {
           "branch": null,
-          "revision": "0e00c967a010fc43ce528bd633d032f17158d393",
-          "version": "7.6.4"
+          "revision": "dbdc00669c1ced63b27c3c5f052ee4d28f10150c",
+          "version": "7.6.5"
         }
       },
       {
         "package": "SwiftyUserDefaults",
         "repositoryURL": "https://github.com/sunshinejr/SwiftyUserDefaults.git",
         "state": {
-          "branch": null,
-          "revision": "1930a81a299b074fd72eee09e88e452ad37dc34d",
-          "version": "5.0.0"
+          "branch": "master",
+          "revision": "05580d9ec2288adfdb44c182500c101f5f4ea9a6",
+          "version": null
         }
       },
       {
@@ -33,8 +33,8 @@
         "repositoryURL": "https://github.com/K3TZR/xLib6000.git",
         "state": {
           "branch": null,
-          "revision": "de42f57808236de3b13bf4e76118a8f1315553f7",
-          "version": "1.6.4"
+          "revision": "5b23e1afa02d43171d309c2902cd8125ee61811b",
+          "version": "1.6.5"
         }
       }
     ]
