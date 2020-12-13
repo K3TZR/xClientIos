@@ -27,6 +27,8 @@ Please send any bugs / comments / questions to support@k3tzr.net
 [![W6OP](https://img.shields.io/badge/W6OP-xVoiceKeyer,_xCW-informational)](https://w6op.com) A Mac-based Voice Keyer and a CW Keyer.  
 
 ---
+##### 0.9.2 Release Notes
+* changed SwiftyUserDefaults back to "from 5.0.0"
 
 ##### 0.9.1 Release Notes
 * uses newer xLIb6000 which uses newer CocoaAsyncSocket (7.6.5) to eliminate iOS 8 warning

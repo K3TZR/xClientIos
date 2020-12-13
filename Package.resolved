@@ -14,9 +14,9 @@
         "package": "SwiftyUserDefaults",
         "repositoryURL": "https://github.com/sunshinejr/SwiftyUserDefaults.git",
         "state": {
-          "branch": "master",
-          "revision": "05580d9ec2288adfdb44c182500c101f5f4ea9a6",
-          "version": null
+          "branch": null,
+          "revision": "1930a81a299b074fd72eee09e88e452ad37dc34d",
+          "version": "5.0.0"
         }
       },
       {
