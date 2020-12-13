@@ -1,5 +1,5 @@
 //
-//  xClientMacExtensions.swift
+//  xClientIosExtensions.swift
 //  xClientIos package
 //
 //  Created by Douglas Adams on 10/12/20.
