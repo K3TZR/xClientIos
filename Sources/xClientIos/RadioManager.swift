@@ -48,7 +48,7 @@ public struct Station : Identifiable {
     }
 }
 
-public typealias ButtonTuple = (text: String, action: (()->Void)?)
+public typealias ButtonTuple = (text: String, action: ((UIAlertAction)->Void)?)
 public enum AlertStyle {
     case informational
     case warning
@@ -61,7 +61,7 @@ public struct AlertParams {
     public var message = ""
     public var buttons = [ButtonTuple]()
     
-    public init(style: AlertStyle, title: String, message: String, buttons: [ButtonTuple] = [("OK", nil)]) {
+    public init(style: AlertStyle, title: String, message: String, buttons: [ButtonTuple] = []) {
         self.style = style
         self.title = title
         self.message = message
@@ -88,13 +88,16 @@ public protocol RadioManagerDelegate {
     ///
     func disconnectionState(_ msg: String)
     
-    var clientId              : String  {get}         // the app's ClientId
-    var connectAsGui          : Bool    {get}         // whether to connect as a Gui client
-    var smartLinkAuth0Email   : String  {get set}     // the saved email address
-    var smartLinkEnabled      : Bool    {get}         // whether SmartLink should be initialized
-    var stationName           : String  {get}         // the name of the Station
-    var defaultConnection     : String  {get set}     // the default Non-Gui connection string
-    var defaultGuiConnection  : String  {get set}     // the default Gui connection string
+    var clientId                : String  {get}         // the app's ClientId
+    var connectToFirstRadio     : Bool    {get set}
+    var defaultConnection       : String  {get set}     // the default Non-Gui connection string
+    var defaultGuiConnection    : String  {get set}     // the default Gui connection string
+    var enableGui               : Bool    {get}         // whether to connect as a Gui client
+    var enableSmartLink         : Bool    {get}         // whether SmartLink should be initialized
+    var smartLinkAuth0Email     : String  {get set}     // the saved email address
+    var smartLinkIsLoggedIn     : Bool    {get set}
+    var smartLinkTestStatus     : Bool    {get set}
+    var stationName             : String  {get}         // the name of the Station
 }
 
 // ----------------------------------------------------------------------------
@@ -102,6 +105,8 @@ public protocol RadioManagerDelegate {
 // ----------------------------------------------------------------------------
 
 public final class RadioManager : ObservableObject {
+    
+    typealias connectionTuple = (type: String, serialNumber: String, station: String)
     
     // ----------------------------------------------------------------------------
     // MARK: - Static properties
@@ -123,28 +128,23 @@ public final class RadioManager : ObservableObject {
     @Published public var activeRadio            : Radio?
     @Published public var stations               = [Station]()
     
-    @Published public var pickerPackets          = [PickerPacket]()
-    @Published public var showPickerSheet        = false
     @Published public var pickerSelection        = Set<Int>()
     @Published public var stationSelection       = 0
     
     @Published public var showAlertView          = false
     @Published public var showAuth0Sheet         = false
     
-    @Published public var smartLinkIsLoggedIn    = false
-    @Published public var smartLinkTestStatus    = false
     @Published public var smartLinkName          = ""
     @Published public var smartLinkCallsign      = ""
     @Published public var smartLinkImage         : UIImage?
     
-    public var alertParams            = AlertParams(style: .informational, title: "", message: "", buttons: [("Ok", nil)])
-    
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    public var delegate     : RadioManagerDelegate
-    var wanManager          : WanManager?
-    var packets             : [DiscoveryPacket] { Discovery.sharedInstance.discoveryPackets }
+    public var delegate : RadioManagerDelegate
+    var pickerPackets   = [PickerPacket]()
+    var wanManager      : WanManager?
+    var packets         : [DiscoveryPacket] { Discovery.sharedInstance.discoveryPackets }
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
@@ -152,7 +152,7 @@ public final class RadioManager : ObservableObject {
     private var _api            = Api.sharedInstance          // initializes the API
     private var _appNameTrimmed = ""
     private var _autoBind       : Int? = nil
-    private let _log            = Log.sharedInstance.logMessage
+    private let _log            = LogProxy.sharedInstance.logMessage
     private let _domain         : String
     
     private let kAvailable      = "available"
@@ -173,7 +173,7 @@ public final class RadioManager : ObservableObject {
         addNotifications()
         
         // if SmartLink enabled, attemp to Log in
-        if delegate.smartLinkEnabled {
+        if delegate.enableSmartLink {
             smartLinkLogin()
         } else {
             smartLinkName = ""
@@ -188,60 +188,93 @@ public final class RadioManager : ObservableObject {
     /// Initiate a connection to the first Radio found
     ///
     public func connectToFirstFound() {
-        // NO, were one or more radios found?
-        if packets.count > 0 {
+        // anything to connect to?
+        if packetsAvailable() {
             // YES, attempt a connection to the first
             connect(to: 0)
-        } else {
-            // NO, no radios found
-            alertParams = AlertParams(style: .warning, title: "Connection failed", message: "No Radios found", buttons: [("Ok", nil)])
-            showAlertView = true
-            delegate.connectionState(false, "", "No Radios found")
         }
     }
-    /// Initiate a connection to a Radio
+    
+    /// Initiate a connection to the Radio with the specified connection string
     /// - Parameter connection:   a connection string (in the form <type>.<serialNumber>)
     ///
-    public func connect(to connection: String) {
-        
+    public func connectTo(connectionString: String) {
         // YES, is it a valid connection string?
-        if let conn = parseConnection(connection) {
-            // VALID, find the matching packet
-            var foundIndex : Int? = nil
-            for (i, packet) in pickerPackets.enumerated() {
-                if packet.serialNumber == conn.serialNumber && packet.type.rawValue == conn.type {
-                    if delegate.connectAsGui {
-                        foundIndex = i
-                    } else if packet.stations == conn.station {
-                        foundIndex = i
-                    }
-                }
-            }
-            // is there a match?
-            if let index = foundIndex {
+        if let connectionTuple = validConnection(connectionString) {
+            // VALID, is there a match?
+            if let connectionIndex = findMatching(connectionTuple) {
                 // YES, attempt a connection to it
-                connect(to: index)
+                connect(to: connectionIndex)
             } else {
                 // NO, no match found
-                alertParams = AlertParams(style: .warning, title: "Connection failed", message: "No matching radio for: \(connection)", buttons: [("Ok", nil)])
-                showAlertView = true
-                delegate.connectionState(false, connection, "No matching radio")
+                let alertParams = AlertParams(style: .warning, title: "Connection failed",
+                                          message:  """
+                                                    No matching radio for:
+
+                                                    \(connectionString)
+                                                    """,
+                                          buttons: [("Ok", nil)])
+                NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
+                delegate.connectionState(false, connectionString, "No matching radio")
             }
         } else {
             // NO, not a valid connection string
-            alertParams = AlertParams(style: .warning, title: "Connection failed", message: "Invalid connection string: \(connection)", buttons: [("Ok", nil)])
-            showAlertView = true
-            delegate.connectionState(false, connection, "Invalid connection string")
+            let alertParams = AlertParams(style: .warning, title: "Connection failed",
+                                      message:  """
+                                                Invalid connection string:
+
+                                                \(connectionString)
+                                                """,
+                                      buttons: [("Ok", nil)])
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
+            delegate.connectionState(false, connectionString, "Invalid connection string")
         }
+    }
+    
+    /// Check that one or more packets exist
+    /// - Returns: yes / no
+    ///
+    func packetsAvailable() -> Bool {
+        loadPickerPackets()
+        if pickerPackets.count == 0 {
+            // NO, no radios found
+            let alertParams = AlertParams(style: .warning, title: "No \(delegate.enableGui ? "Radios" : "Stations") found",
+                                      message:  "",
+                                      buttons: [("Ok", nil)])
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
+        }
+        return (pickerPackets.count != 0)
     }
     
     /// Initiate a connection to a Radio using the RadioPicker
     ///
     public func showPicker() {
-        loadPickerPackets()
-        smartLinkTestStatus = false
-        pickerSelection = Set<Int>()
-        DispatchQueue.main.async { self.showPickerSheet = true }
+        if packetsAvailable() {
+            var buttons = [ButtonTuple]()
+            for (_, packet) in pickerPackets.enumerated() {
+                if delegate.enableGui {
+                    if packet.nickname != "" {
+                        var item = ButtonTuple(text: packet.nickname + ", " + (packet.type == .wan ? "SmartLink" : "Local"), action: { [self] action in connectTo(connectionString: packet.connectionString) })
+                        if packet.connectionString == delegate.defaultGuiConnection { item.text = "--> " + item.text + " <--"}
+                        buttons.append(item)
+                    }
+                } else {
+                    if packet.stations != "" {
+                        var item = ButtonTuple(text: packet.stations + ", " + (packet.type == .wan ? "SmartLink" : "Local"), action: { [self] action in connectTo(connectionString: packet.connectionString)})
+                        if packet.connectionString == delegate.defaultConnection { item.text = "--> " + item.text + " <--"}
+                        buttons.append(item)
+                    }
+                }
+            }
+            buttons.append(ButtonTuple(text: "Cancel", action: { _ in }))
+            let alertParams = AlertParams(style: .warning, title: delegate.enableGui ? "Available Radios" : "Available Stations",
+                                          message:  """
+                                            Choose one or Cancel
+
+                                            """,
+                                          buttons: buttons)
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
+        }
     }
     
     public func removeSmartLinkRadios() {
@@ -251,8 +284,7 @@ public final class RadioManager : ObservableObject {
     /// Disconnect the current connection
     /// - Parameter msg:    explanation
     ///
-    public func disconnect(reason: String = RadioManager.kUserInitiated) {
-        
+    public func disconnect(reason: String = RadioManager.kUserInitiated) {        
         _log("RadioManager: Disconnect - \(reason)", .info,  #function, #file, #line)
         
         // tell the library to disconnect
@@ -263,20 +295,18 @@ public final class RadioManager : ObservableObject {
             for (i, _) in activePacket!.guiClients.enumerated() {
                 activePacket!.guiClients[i].clientId = nil
             }
-            
             activePacket = nil
             activeRadio = nil
             stationSelection = 0
-            stations.removeAll()
-            
+            stations.removeAll()            
         }
         // if anything unusual, tell the delegate
         if reason != RadioManager.kUserInitiated {
-            alertParams = AlertParams(style: .warning,
+            let alertParams = AlertParams(style: .warning,
                                       title: "Radio was disconnected",
                                       message: reason,
                                       buttons: [("Ok", nil)])
-            showAlertView = true
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
             delegate.disconnectionState( reason)
         }
     }
@@ -284,9 +314,58 @@ public final class RadioManager : ObservableObject {
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
+    public func chooseDefault() {
+        if packetsAvailable() {
+            var buttons = [ButtonTuple]()
+            for (_, packet) in pickerPackets.enumerated() {
+                var item = ButtonTuple(text: packet.nickname + ", " + (packet.type == .wan ? "SmartLink" : "Local"), action: { [self] action in setDefault(packet.connectionString) })
+                if delegate.enableGui {
+                    if packet.connectionString == delegate.defaultGuiConnection { item.text = "--> " + item.text + " <--"}
+                    if packet.nickname != "" { buttons.append(item) }
+                } else {
+                    if packet.connectionString == delegate.defaultConnection { item.text = "--> " + item.text + " <--"}
+                    if packet.stations != "" { buttons.append(ButtonTuple(text: packet.stations + ", " + (packet.type == .wan ? "SmartLink" : "Local"), action: { [self] action in setDefault(packet.connectionString) })) }
+                }
+            }
+            buttons.append(ButtonTuple(text: delegate.connectToFirstRadio ? "--> First Found <--" : "First Found", action: { [self] _ in setFirstFound()} ))
+            buttons.append(ButtonTuple(text: "Reset Default", action: { [self] _ in resetDefault()} ))
+            buttons.append(ButtonTuple(text: "Cancel", action: { _ in }))
+            let alertParams = AlertParams(style: .warning, title: "Available Defaults",
+                                          message:  """
+                                            Choose one or Cancel
+
+                                            """,
+                                          buttons: buttons)
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
+        }
+    }
+    
+    func setDefault(_ connectionString: String) {
+        delegate.connectToFirstRadio = false
+        if delegate.enableGui {
+            delegate.defaultGuiConnection = connectionString
+        } else {
+            delegate.defaultConnection = connectionString
+        }
+    }
+
+    func setFirstFound() {
+        resetDefault()
+        delegate.connectToFirstRadio = true
+    }
+
+    func resetDefault() {
+        delegate.connectToFirstRadio = false
+        if delegate.enableGui {
+            delegate.defaultGuiConnection = ""
+        } else {
+            delegate.defaultConnection = ""
+        }
+    }
+
     /// Initiate a Login to the SmartLink server
     ///
-    func smartLinkLogin() {
+    public func smartLinkLogin() {
         // start the WanManager
         wanManager = WanManager(radioManager: self, appNameTrimmed: _appNameTrimmed)
         
@@ -294,8 +373,8 @@ public final class RadioManager : ObservableObject {
         if wanManager!.smartLinkLogin(using: delegate.smartLinkAuth0Email) {
             // YES
             DispatchQueue.main.async { [self] in
-                smartLinkIsLoggedIn = true
-                showPickerSheet = true
+                delegate.smartLinkIsLoggedIn = true
+//                showPicker()
             }
         } else {
             // NO, show the Auth0View to allow the user to enter SmartLink credentials
@@ -309,7 +388,7 @@ public final class RadioManager : ObservableObject {
     
     /// Initiate a Logout from the SmartLink server
     ///
-    func smartLinkLogout() {
+    public func smartLinkLogout() {
         // remove any SmartLink radios from Discovery
         Discovery.sharedInstance.removeSmartLinkRadios()
         
@@ -319,21 +398,28 @@ public final class RadioManager : ObservableObject {
         
         DispatchQueue.main.async { [self] in
             // remember the current state
-            smartLinkIsLoggedIn = false
+            delegate.smartLinkIsLoggedIn = false
             
             // remove the current user info
             smartLinkName = ""
             smartLinkCallsign = ""
             smartLinkImage = nil
-            
-            showPickerSheet = true
         }
     }
     
+    /// Receives the results of a SmartLink test
+    /// - Parameters:
+    ///   - status:     pass / fail
+    ///   - msg:        a summary of the results
+    ///
     func smartLinkTestResults(status: Bool, msg: String) {
-        if status == false {
-            alertParams = AlertParams(style: .warning, title: "SmartLink Test FAILED", message: msg, buttons: [("Ok", nil)])
-            showAlertView = true
+        DispatchQueue.main.async { [self] in
+            delegate.smartLinkTestStatus = status    // set the indicator
+
+            if status == false {
+                let alertParams = AlertParams(style: .error, title: "SmartLink test failed", message: msg, buttons: [("Ok", nil)])
+                NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
+            }
         }
     }
     
@@ -346,67 +432,63 @@ public final class RadioManager : ObservableObject {
     ///
     func openRadio(_ packet: DiscoveryPacket) {
         
-        guard delegate.connectAsGui else {
-            connectRadio(packet, isGui: delegate.connectAsGui, station: delegate.stationName)
+        guard delegate.enableGui else {
+            connectRadio(packet, isGui: delegate.enableGui, station: delegate.stationName)
             return
         }
         
         switch (Version(packet.firmwareVersion).isNewApi, packet.status.lowercased(), packet.guiClients.count) {
         case (false, kAvailable, _):          // oldApi, not connected to another client
-            connectRadio(packet, isGui: delegate.connectAsGui, station: delegate.stationName)
+            connectRadio(packet, isGui: delegate.enableGui, station: delegate.stationName)
             
         case (false, kInUse, _):              // oldApi, connected to another client
-            let firstButtonAction = { [self] in
-                connectRadio(packet, isGui: delegate.connectAsGui, pendingDisconnect: .oldApi, station: delegate.stationName)
+            let button1: (UIAlertAction)->Void = { [self] _ in
+                connectRadio(packet, isGui: delegate.enableGui, pendingDisconnect: .oldApi, station: delegate.stationName)
                 sleep(1)
                 _api.disconnect()
                 sleep(1)
                 showPicker()
             }
-            alertParams = AlertParams(style: .informational,
-                                      title: "Radio is connected to another Client",
-                                      message: "Close the other Client?",
-                                      buttons: [
-                                        ( "Close this client", firstButtonAction ),
-                                        ( "Cancel", {})
-                                      ])
-            showAlertView = true
+            let button2: (UIAlertAction)->Void = { _ in }
+            let alertParams = AlertParams(style: .informational,
+                                          title: "Radio is connected to another Client",
+                                          message: "Close the other Client?",
+                                          buttons: [
+                                            ("Close the other Client", button1),
+                                            ("Cancel", button2),
+                                          ])
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
             
         case (true, kAvailable, 0):           // newApi, not connected to another client
             connectRadio(packet, station: delegate.stationName)
             
         case (true, kAvailable, _):           // newApi, connected to another client
-            let firstButtonAction = { [self] in
-                connectRadio(packet, isGui: delegate.connectAsGui, pendingDisconnect: .newApi(handle: packet.guiClients[0].handle), station: delegate.stationName)
-            }
-            let secondButtonAction = { [self] in
-                connectRadio(packet, isGui: delegate.connectAsGui, station: delegate.stationName)
-            }
-            alertParams = AlertParams(style: .informational,
-                                      title: "Radio is connected to Station: \(packet.guiClients[0].station)",
-                                      message: "Close the Station . . Or . . Connect using Multiflex",
-                                      buttons: [
-                                        ( "Close \(packet.guiClients[0].station)", firstButtonAction ),
-                                        ( "Multiflex Connect", secondButtonAction),
-                                        ( "Cancel", {})
-                                      ])
-            //      delegate.displayAlert(params)
-            DispatchQueue.main.async {self.showAlertView = true}
+            let button1: (UIAlertAction)->Void = { [self] _ in connectRadio(packet, isGui: delegate.enableGui, pendingDisconnect: .newApi(handle: packet.guiClients[0].handle), station: delegate.stationName)}
+            let button2: (UIAlertAction)->Void = { [self] _ in connectRadio(packet, isGui: delegate.enableGui, station: delegate.stationName) }
+            let button3: (UIAlertAction)->Void = { _ in }
+            let alertParams = AlertParams(style: .informational,
+                                          title: "Radio is connected to Station: \(packet.guiClients[0].station)",
+                                          message: "Choose one of the following",
+                                          buttons: [
+                                            ("Close \(packet.guiClients[0].station)", button1),
+                                            ("Multiflex connect", button2),
+                                            ("Cancel", button3),
+                                          ])
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
             
         case (true, kInUse, 2):               // newApi, connected to 2 clients
-            let firstButtonAction = { [self] in
-                connectRadio(packet, isGui: delegate.connectAsGui, pendingDisconnect: .newApi(handle: packet.guiClients[0].handle), station: delegate.stationName)      }
-            let secondButtonAction = { [self] in
-                connectRadio(packet, isGui: delegate.connectAsGui, pendingDisconnect: .newApi(handle: packet.guiClients[1].handle), station: delegate.stationName)      }
-            alertParams = AlertParams(style: .informational,
-                                      title: "Radio is connected to multiple Stations",
-                                      message: "Close one of the Stations",
-                                      buttons: [
-                                        ( "Close \(packet.guiClients[0].station)", firstButtonAction ),
-                                        ( "Close \(packet.guiClients[1].station)", secondButtonAction),
-                                        ( "Cancel", {})
-                                      ])
-            DispatchQueue.main.async {self.showAlertView = true}
+            let button1: (UIAlertAction)->Void = { [self] _ in connectRadio(packet, isGui: delegate.enableGui, pendingDisconnect: .newApi(handle: packet.guiClients[0].handle), station: delegate.stationName)}
+            let button2: (UIAlertAction)->Void = { [self] _ in connectRadio(packet, isGui: delegate.enableGui, pendingDisconnect: .newApi(handle: packet.guiClients[1].handle), station: delegate.stationName)}
+            let button3: (UIAlertAction)->Void = { _ in }
+            let alertParams = AlertParams(style: .informational,
+                                          title: "Radio is connected to multiple Stations",
+                                          message: "Close one of the Station",
+                                          buttons: [
+                                            ("Close \(packet.guiClients[0].station)", button1),
+                                            ("Close \(packet.guiClients[1].station)", button2),
+                                            ("Cancel", button3),
+                                          ])
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
             
         default:
             break
@@ -418,7 +500,7 @@ public final class RadioManager : ObservableObject {
     ///
     func closeRadio(_ packet: DiscoveryPacket) {
         
-        guard delegate.connectAsGui else {
+        guard delegate.enableGui else {
             disconnect()
             return
         }
@@ -436,47 +518,32 @@ public final class RadioManager : ObservableObject {
                 self.disconnect()
                 
             } else {
-                
                 // FIXME: don't think this code can ever be executed???
-                
-                // NO, let the user choose what to do
-                let firstButtonAction = { [self] in
-                    clientDisconnect( packet: packet, handle: packet.guiClients[0].handle)
-                }
-                let secondButtonAction = { [self] in
-                    clientDisconnect( packet: packet, handle: packet.guiClients[1].handle)
-                }
-                alertParams = AlertParams(style: .informational,
-                                          title: "Radio is connected to one Station",
-                                          message: "Close the Station . . Or . . Disconnect " + _appNameTrimmed,
-                                          buttons: [
-                                            ( "Close \(packet.guiClients[0].station)", firstButtonAction ),
-                                            ( "Disconnect " + _appNameTrimmed, secondButtonAction),
-                                            ( "Cancel", {})
-                                          ])
-                DispatchQueue.main.async {self.showAlertView = true}
+                let button1: (UIAlertAction)->Void = { [self] _ in clientDisconnect( packet: packet, handle: packet.guiClients[0].handle)}
+                let button2: (UIAlertAction)->Void = { [self] _ in clientDisconnect( packet: packet, handle: packet.guiClients[1].handle)}
+                let alertParams = AlertParams(style: .informational,
+                                              title: "Radio is connected to multiple Stations",
+                                              message: "Close one of the Station",
+                                              buttons: [
+                                                ( "Close \(packet.guiClients[0].station)", button1 ),
+                                                ( "Disconnect " + _appNameTrimmed, button2),
+                                              ])
+                NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
             }
             
         case (true, kInUse, 2):           // newApi, 2 clients
-            let firstButtonAction = { [self] in
-                clientDisconnect( packet: packet, handle: packet.guiClients[0].handle)
-            }
-            let secondButtonAction = { [self] in
-                clientDisconnect( packet: packet, handle: packet.guiClients[1].handle)
-            }
-            let thirdButtonAction = { [self] in
-                disconnect()
-            }
-            alertParams = AlertParams(style: .informational,
-                                      title: "Radio is connected to multiple Stations",
-                                      message: "Close a Station . . Or . . Disconnect "  + _appNameTrimmed,
-                                      buttons: [
-                                        ( (packet.guiClients[0].station == _appNameTrimmed ? "---" : "Close \(packet.guiClients[0].station)"), firstButtonAction ),
-                                        ( (packet.guiClients[0].station == _appNameTrimmed ? "---" : "Close \(packet.guiClients[1].station)"), secondButtonAction),
-                                        ( "Disconnect " + _appNameTrimmed, thirdButtonAction),
-                                        ( "Cancel", {})
-                                      ])
-            DispatchQueue.main.async {self.showAlertView = true}
+            let button1: (UIAlertAction)->Void = { [self] _ in clientDisconnect( packet: packet, handle: packet.guiClients[0].handle)}
+            let button2: (UIAlertAction)->Void = { [self] _ in clientDisconnect( packet: packet, handle: packet.guiClients[1].handle)}
+            let button3: (UIAlertAction)->Void = { [self] _ in disconnect()}
+            let alertParams = AlertParams(style: .informational,
+                                          title: "Radio is connected to multiple Stations",
+                                          message: "Close one of the Station",
+                                          buttons: [
+                                            ( (packet.guiClients[0].station == _appNameTrimmed ? "---" : "Close \(packet.guiClients[0].station)"), button1 ),
+                                            ( (packet.guiClients[0].station == _appNameTrimmed ? "---" : "Close \(packet.guiClients[1].station)"), button2 ),
+                                            ( "Disconnect " + _appNameTrimmed, button3),
+                                          ])
+            NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
             
         default:
             self.disconnect()
@@ -487,28 +554,34 @@ public final class RadioManager : ObservableObject {
     
     /// Called when the Picker's Close button is clicked
     ///
-    func closePicker() {
-        DispatchQueue.main.async { self.showPickerSheet = false }
-    }
+//    func closePicker() {
+//        DispatchQueue.main.async { self.showPickerSheet = false }
+//    }
     
     /// Called when the Picker's Test button is clicked
     ///
-    func testSmartLink() {
-        if let i = pickerSelection.first {
-            let packet = packets[i]
-            wanManager?.sendTestConnection(for: packet)
+    public func smartLinkTest() {
+        var buttons = [ButtonTuple]()
+        buttons.append(ButtonTuple(text: "Cancel", action: nil))
+        for packet in pickerPackets where packet.type == .wan {
+            buttons.append( ButtonTuple(text: packet.nickname, action: { [self] _ in wanManager?.sendTestConnection(for: packet.serialNumber) }))
         }
+        let alertParams = AlertParams(style: .informational,
+                                      title: "SmartLink connections",
+                                      message: "Choose one or Cancel",
+                                      buttons: buttons)
+        NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
     }
     
     /// Called when the Picker's Select button is clicked
     ///
-    func connect(to selection: Set<Int>) {
-        if let i = selection.first {
-            // remove the selection highlight
-            pickerSelection = Set<Int>()
-            connect(to: i)
-        }
-    }
+//    func connect(to selection: Set<Int>) {
+//        if let i = selection.first {
+//            // remove the selection highlight
+//            pickerSelection = Set<Int>()
+//            connect(to: i)
+//        }
+//    }
     
     // ----------------------------------------------------------------------------
     // MARK: - Auth0 actions
@@ -522,8 +595,28 @@ public final class RadioManager : ObservableObject {
     // ----------------------------------------------------------------------------
     // MARK: - Private
     
+    /// Given aTuple find a match in Packets
+    /// - Parameter conn: a Connection Tuple
+    /// - Returns: the index into Packets (if any) of a match
+    ///
+    private func findMatching(_ conn: connectionTuple) -> Int? {
+        for (i, packet) in pickerPackets.enumerated() {
+            if packet.serialNumber == conn.serialNumber && packet.type.rawValue == conn.type {
+                if delegate.enableGui {
+                    return i
+                } else if packet.stations == conn.station {
+                    return i
+                }
+            }
+        }
+        return nil
+    }
+    
+    /// Cause a bind command to be sent
+    /// - Parameter id:     a Client Id
+    ///
     private func bind(to id: String) {
-        // cause a bind command to be sent
+        //
         activeRadio?.boundClientId = id
     }
     
@@ -534,13 +627,13 @@ public final class RadioManager : ObservableObject {
         
         guard activePacket == nil else { disconnect() ; return }
         
-        let packetIndex = delegate.connectAsGui ? index : pickerPackets[index].packetIndex
+        let packetIndex = delegate.enableGui ? index : pickerPackets[index].packetIndex
         
         if packets.count - 1 >= packetIndex {
             let packet = packets[packetIndex]
             
             // if Non-Gui, schedule automatic binding
-            _autoBind = delegate.connectAsGui ? nil : index
+            _autoBind = delegate.enableGui ? nil : index
             
             if packet.isWan {
                 wanManager?.validateWanRadio(packet)
@@ -557,7 +650,7 @@ public final class RadioManager : ObservableObject {
     ///
     private func connectRadio(_ packet: DiscoveryPacket, isGui: Bool = true, pendingDisconnect: Api.PendingDisconnect = .none, station: String = "") {
         // station will be computer name if not passed
-        let stationName = (station == "" ? "iPad" : station)
+        let stationName = (station == "" ? delegate.stationName : station)
         
         // attempt a connection
         _api.connect(packet,
@@ -573,13 +666,13 @@ public final class RadioManager : ObservableObject {
     /// Create a subset of DiscoveryPackets for use by the RadioPicker
     /// - Returns:                an array of PickerPacket
     ///
-    private func loadPickerPackets() {
+    public func loadPickerPackets() {
         var newPackets = [PickerPacket]()
         var newStations = [Station]()
         var i = 0
         var p = 0
         
-        if delegate.connectAsGui {
+        if delegate.enableGui {
             // GUI connection
             for packet in packets {
                 newPackets.append( PickerPacket(id: p,
@@ -612,7 +705,7 @@ public final class RadioManager : ObservableObject {
             
             // Non-Gui connection
             for packet in packets {
-                for client in packet.guiClients {
+                for client in packet.guiClients where client.station != "" {
                     newPackets.append( PickerPacket(id: p,
                                                     packetIndex: p,
                                                     type: packet.isWan ? .wan : .local,
@@ -631,10 +724,8 @@ public final class RadioManager : ObservableObject {
                 p += 1
             }
         }
-        DispatchQueue.main.async {
-            self.pickerPackets = newPackets
-            self.stations = newStations
-        }
+        self.pickerPackets = newPackets
+//        self.stations = newStations
     }
     
     /// Parse the Type and Serial Number in a connection string
@@ -642,7 +733,7 @@ public final class RadioManager : ObservableObject {
     /// - Parameter connectionString:   a string of the form <type>.<serialNumber>
     /// - Returns:                      a tuple containing the parsed values (if any)
     ///
-    private func parseConnection(_ connectionString: String) -> (type: String, serialNumber: String, station: String)? {
+    private func validConnection(_ connectionString: String) -> (type: String, serialNumber: String, station: String)? {
         // A Connection is stored as a String in the form:
         //      "<type>.<serial number>"  OR  "<type>.<serial number>.<station>"
         //      where:

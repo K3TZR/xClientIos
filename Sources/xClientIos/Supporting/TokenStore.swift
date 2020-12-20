@@ -16,15 +16,34 @@ import Security
 final class TokenStore {
     
     // ----------------------------------------------------------------------------
-    // MARK: - Class methods
+    // MARK: - Private properties
+    
+    private var _wrapper : KeychainWrapper
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Initialization
+    
+    init(service: String) {
+        _wrapper = KeychainWrapper(serviceName: service)
+    }
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Public methods
+    
+    public func set(account: String, data: String) {
+        _wrapper.set(data, forKey: account)
+    }
+    
+    public func get(account: String) -> String? {
+        return _wrapper.string(forKey: account)
+    }
+    
+    public func delete(account: String) -> Bool{
+        return _wrapper.removeObject(forKey: account)
+    }
+}
 
-    
-    // FIXME: Need iOS specific methods
-    
-    
-    
-    
-    static func set(_ service: String, account: String, data: String) {
+//    static func set(_ service: String, account: String, data: String) {
 //        var item: SecKeychainItem? = nil
 //
 //        var status = SecKeychainFindGenericPassword(
@@ -59,9 +78,9 @@ final class TokenStore {
 //        if status != noErr {
 //            Logger.sharedInstance.logMessage("Error setting keychain item: \(SecCopyErrorMessageString(status, nil) ?? "" as CFString)", .debug,  #function, #file, #line)
 //        }
-    }
-    
-    static func get(_ service: String, account: String) -> String? {
+//    }
+//
+//    static func get(_ service: String, account: String) -> String? {
 //        var passwordLength: UInt32 = 0
 //        var password: UnsafeMutableRawPointer? = nil
 //
@@ -82,10 +101,10 @@ final class TokenStore {
 //            return result
 //        }
 //
-        return nil
-    }
-    
-    static func delete(_ service: String, account: String) {
+//        return nil
+//    }
+//
+//    static func delete(_ service: String, account: String) {
 //        var item: SecKeychainItem? = nil
 //
 //        var status = SecKeychainFindGenericPassword(
@@ -113,5 +132,5 @@ final class TokenStore {
 //        if status != noErr {
 //            Logger.sharedInstance.logMessage("Error deleting keychain item: \(SecCopyErrorMessageString(status, nil) ?? "" as CFString)", .debug,  #function, #file, #line)
 //        }
-    }
-}
+//    }
+//}

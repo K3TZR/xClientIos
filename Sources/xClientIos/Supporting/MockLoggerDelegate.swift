@@ -12,7 +12,7 @@ class MockLoggerDelegate : LoggerDelegate, ObservableObject {
 // ----------------------------------------------------------------------------
 // MARK: - Published properties
 
-  @Published var logWindowIsVisible  : Bool = false
+  @Published var showLogWindow  : Bool = false
   
 // ----------------------------------------------------------------------------
 // MARK: - Internal properties

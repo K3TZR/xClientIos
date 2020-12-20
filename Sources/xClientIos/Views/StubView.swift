@@ -11,34 +11,30 @@ import SwiftUI
 ///     allows display of the Picker and Auth0 sheets (supplied by xLibClient)
 ///
 public struct StubView: View {
-  @ObservedObject public var radioManager: RadioManager
+    @ObservedObject var radioManager: RadioManager
 
-  public init(radioManager: RadioManager) {
-    self.radioManager = radioManager
-  }
-
-  public var body: some View {
-    ZStack {
-      EmptyView()
-        .sheet(isPresented: $radioManager.showPickerSheet) {
-          PickerView()
-            .environmentObject(radioManager)
-        }
-      EmptyView()
-        .sheet(isPresented: $radioManager.showAuth0Sheet ) {
-          Auth0View()
-            .environmentObject(radioManager)
-        }
-      EmptyView()
-        .sheet(isPresented: $radioManager.showAlertView) {
-          AlertView(params: radioManager.alertParams)
+    public init(radioManager: RadioManager) {
+        self.radioManager = radioManager
+    }
+    
+    public var body: some View {
+        ZStack {
+//            EmptyView()
+//                .sheet(isPresented: $radioManager.showPickerSheet) {
+//                    PickerView()
+//                        .environmentObject(radioManager)
+//                }
+            EmptyView()
+                .sheet(isPresented: $radioManager.showAuth0Sheet ) {
+                    Auth0View()
+                        .environmentObject(radioManager)
+                }
         }
     }
-  }
 }
 
 public struct StubView_Previews: PreviewProvider {
-  public static var previews: some View {
-    StubView(radioManager: RadioManager(delegate: MockRadioManagerDelegate(), domain: "net.k3tzr", appName: "xApi6000"))
-  }
+    public static var previews: some View {
+        StubView(radioManager: RadioManager(delegate: MockRadioManagerDelegate(), domain: "net.k3tzr", appName: "xApi6000"))
+    }
 }

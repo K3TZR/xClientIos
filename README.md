@@ -4,8 +4,8 @@
 
 ##### Built on:
 
-*  macOS 11.0.1
-*  Xcode 12.2 (12B45b)
+*  macOS 11.1
+*  Xcode 12.3 (12C33)
 *  Swift 5.3
 
 ##### Runs on:
@@ -27,12 +27,22 @@ Please send any bugs / comments / questions to support@k3tzr.net
 [![W6OP](https://img.shields.io/badge/W6OP-xVoiceKeyer,_xCW-informational)](https://w6op.com) A Mac-based Voice Keyer and a CW Keyer.  
 
 ---
+##### 0.9.3 Release Notes (NOT PUSHED OR COMMITTED)
+* changed SwiftyUserDefaults dependency  to "from 5.1.0" (new tag to fix iOS 8 warning)
+* updated to xLib6000 v1.6.7 (for iOS v14 requirement)
+* added KeychainItemAccessibility.swift & KeychainWrapper.swift (iOS keychain access)
+* modified TokenStore.swift to use iOS Keychain
+* changes in RadioManagerDelegate protocol to resolve SwiftUI issues
+* changes in Logger.swift to supposrt iOS LogView
+* numerous changes in RadioManager.swift to support iOS
+* changes in WanManager to use iOS version of TokenStore
+
+
 ##### 0.9.2 Release Notes
-* changed SwiftyUserDefaults back to "from 5.0.0"
+* changed SwiftyUserDefaults dependency back to "from 5.0.0"
 
 ##### 0.9.1 Release Notes
 * uses newer xLIb6000 which uses newer CocoaAsyncSocket (7.6.5) to eliminate iOS 8 warning
 * uses master branch of SwiftyUserDefaults to eliminate iOS 8 warning
-
 
 ##### 0.9.0 Release Notes
