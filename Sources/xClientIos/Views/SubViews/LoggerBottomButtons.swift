@@ -7,22 +7,22 @@
 
 import SwiftUI
 
-struct LoggerHeader: View {
+struct LoggerBottomButtons: View {
     @EnvironmentObject var logger: Logger
 
     var body: some View {
         HStack {
+            Stepper("Font Size", value: $logger.fontSize, in: 8...24).frame(width: 175)
             Spacer()
             Text("Log View")
             Spacer()
-            Button(action: {logger.delegate.showLogWindow.toggle() }) {Text("Close")}
+            Button(action: {logger.delegate.showLogWindow.toggle() }) {Text("Back to Main")}
         }
-        .padding(.trailing, 20)
     }
 }
 
-struct LoggerHeader_Previews: PreviewProvider {
+struct LoggerBottomButtons_Previews: PreviewProvider {
     static var previews: some View {
-        LoggerHeader()
+        LoggerBottomButtons()
     }
 }

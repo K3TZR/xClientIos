@@ -53,9 +53,14 @@ public class Logger : LogHandler, ObservableObject {
     // ----------------------------------------------------------------------------
     // MARK: - Public properties
     
-    public var delegate : LoggerDelegate!
-    public var fontSize = 12
-    
+    public var appName      = ""
+    public var domain       = ""
+    public var supportEmail = "support@k3tzr.net"
+    public var delegate     : LoggerDelegate!
+
+    public let maxFontSize  = 24
+    public let minFontSize  = 8
+
     // ----------------------------------------------------------------------------
     // MARK: - Published properties
     
@@ -64,7 +69,8 @@ public class Logger : LogHandler, ObservableObject {
     @Published var level            : LogLevel  = .debug  { didSet{filterLog() }}
     @Published var logLines         = [LogLine]()
     @Published var showTimestamps   = false               { didSet{filterLog() }}
-    
+    @Published var fontSize         = 12
+
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
@@ -75,8 +81,6 @@ public class Logger : LogHandler, ObservableObject {
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    private var _appName      : String = ""
-    private var _domain       : String = ""
     private var _initialized  = false
     private var _logLevel     : XCGLogger.Level = .debug
     private var _objectQ      : DispatchQueue!
@@ -101,8 +105,8 @@ public class Logger : LogHandler, ObservableObject {
     ///
     public func config(delegate: LoggerDelegate, domain: String, appName: String) {
         self.delegate = delegate
-        _domain = domain
-        _appName = appName
+        self.domain = domain
+        self.appName = appName
         
         _objectQ = DispatchQueue(label: appName + ".Logger.objectQ", attributes: [.concurrent])
         _log = XCGLogger(identifier: appName, includeDefaultDestinations: false)
@@ -222,26 +226,26 @@ public class Logger : LogHandler, ObservableObject {
         public var text  = ""
     }
     
-    private var _openFileUrl        : URL?
+    public var openFileUrl          : URL?
+    
     private var _logString          : String!
     private var _linesArray         = [String.SubSequence]()
     
     public func loadLog(at logUrl: URL? = nil) {
         guard _initialized else { fatalError("Logger was not configured before first use.") }
         
-            if let url = logUrl {
-              // read it & populate the textView
-              do {
+        if let url = logUrl {
+            // read it & populate the textView
+            do {
                 logLines.removeAll()
-        
+                
                 _logString = try String(contentsOf: url, encoding: .ascii)
                 _linesArray = _logString.split(separator: "\n")
-                _openFileUrl = url
-//                delegate?.logWindow?.title = "Log Window,  " + url.lastPathComponent
-        
+                openFileUrl = url
+                
                 filterLog()
-        
-              } catch {
+                
+            } catch {
                 let alertParams = AlertParams(style: .warning,
                                               title: "Unable to load Log",
                                               message: """
@@ -253,118 +257,28 @@ public class Logger : LogHandler, ObservableObject {
                                                 """,
                                               buttons: [("Cancel", nil)])
                 NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
-              }
             }
-        
-//            } else {
-//
-//              // allow the user to select a Log file
-//              let openPanel = OpenPanel()
-//              openPanel.canChooseFiles = true
-//              openPanel.canChooseDirectories = false
-//              openPanel.allowsMultipleSelection = false
-//              openPanel.allowedFileTypes = ["log"]
-//              openPanel.directoryURL = URL(fileURLWithPath: URL.appSupport.path + "/" + _domain + "." + _appName + "/Logs")
-//
-//              // open an Open Dialog
-//              openPanel.beginSheetModal(for: delegate!.logWindow!) { [unowned self] (result: NSApplication.ModalResponse) in
-//
-//                // if the user selects Open
-//                if result == NSApplication.ModalResponse.OK {
-//                  if let url = openPanel.url {
-//                    do {
-//                      self.logLines.removeAll()
-//
-//                      self._logString = try String(contentsOf: url, encoding: .ascii)
-//                      self._linesArray = self._logString.split(separator: "\n")
-//                      _openFileUrl = url
-//                      delegate?.logWindow?.title = "Log Window,  " + url.lastPathComponent
-//
-//                      filterLog()
-//
-//                    } catch {
-//                      let alert = NSAlert()
-//                      alert.messageText = "Unable to load Log file"
-//                      alert.informativeText = "File\n\n\(url)\n\nNOT loaded"
-//                      alert.alertStyle = .critical
-//                      alert.addButton(withTitle: "Ok")
-//
-//                      let _ = alert.runModal()
-//                    }
-//                  }
-//                }
-//              }
-//            }
+        }
+    }
+    
+    public func getLogData() -> Data? {
+        guard openFileUrl != nil else { return nil }
+        return try! Data(contentsOf: openFileUrl!)
     }
     
     public func refresh() {
         guard _initialized else { fatalError("Logger was not configured before first use.") }
-        
-//            if let url = _openFileUrl {
-//              do {
-//                logLines.removeAll()
-//
-//                _logString = try String(contentsOf: url, encoding: .ascii)
-//                _linesArray = _logString.split(separator: "\n")
-////                delegate?.logWindow?.title = "Log Window,  " + url.lastPathComponent
-//
-//                filterLog()
-//
-//              } catch {
-//                let alert = NSAlert()
-//                alert.messageText = "Unable to refresh Log"
-//                alert.informativeText = "Log file\n\n\(url)\n\nNOT found"
-//                alert.alertStyle = .critical
-//                alert.addButton(withTitle: "Ok")
-//
-//                let _ = alert.runModal()
-//              }
-//            }
+        loadLog(at: openFileUrl)
     }
-    
-    public func saveLog() {
-        guard _initialized else { fatalError("Logger was not configured before first use.") }
         
-//         Allow the User to save a copy of the Log file
-//            let savePanel = NSSavePanel()
-//            savePanel.allowedFileTypes = ["log"]
-//            savePanel.allowsOtherFileTypes = false
-//            savePanel.nameFieldStringValue = _openFileUrl?.lastPathComponent ?? ""
-//            savePanel.directoryURL = URL(fileURLWithPath: "~/Desktop".expandingTilde)
-//
-//            // open a Save Dialog
-//            savePanel.beginSheetModal(for: delegate!.logWindow!) { [unowned self] (result: NSApplication.ModalResponse) in
-//
-//              // if the user pressed Save
-//              if result == NSApplication.ModalResponse.OK {
-//
-//                if let url = savePanel.url {
-//                  // write it to the File
-//                  do {
-//                    try self._logString.write(to: url, atomically: true, encoding: .ascii)
-//
-//                  } catch {
-//                    let alert = NSAlert()
-//                    alert.messageText = "Unable to save Log file"
-//                    alert.informativeText = "File\n\n\(url)\n\nNOT saved"
-//                    alert.alertStyle = .critical
-//                    alert.addButton(withTitle: "Ok")
-//
-//                    let _ = alert.runModal()
-//                  }
-//                }
-//              }
-//            }
-    }
-    
     /// Filter the displayed Log
     /// - Parameter level:    log level
     ///
     func filterLog() {    
         guard _initialized else { fatalError("Logger was not configured before first use.") }
         
-        var limitedLines = [String.SubSequence]()
-        var filteredLines      = [String.SubSequence]()
+        var limitedLines    = [String.SubSequence]()
+        var filteredLines   = [String.SubSequence]()
         
         // filter the log entries
         switch level {

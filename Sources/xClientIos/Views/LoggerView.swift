@@ -12,27 +12,24 @@ import SwiftUI
 public struct LoggerView: View {
     @EnvironmentObject var logger: Logger
     
-//    let width : CGFloat = 1000
-    
     public init() {}
     
     public var body: some View {
         
         VStack {
-            LoggerHeader()
+            LoggerTopButtons()
             Divider().frame(height: 2).background(Color(.opaqueSeparator))
 
-            LogLines()
+            LoggerLines()
             Divider().frame(height: 2).background(Color(.opaqueSeparator))
-
-            LoggerTrailer()
+            
+            LoggerBottomButtons()
         }
         .onAppear() {
             // initialize Logger with the default log
-            let defaultLogUrl = URL(fileURLWithPath: URL.appSupport.path + "/" + "net.k3tzr" + "." + "TestIos" + "/Logs/" + "TestIos" + ".log")
+            let defaultLogUrl = URL(fileURLWithPath: URL.appSupport.path + "/" + logger.domain + "." + logger.appName + "/Logs/" + logger.appName + ".log")
             Logger.sharedInstance.loadLog(at: defaultLogUrl)
         }
-//        .frame(minWidth: width, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
     }
 }
 
@@ -42,3 +39,4 @@ public struct LoggerView_Previews: PreviewProvider {
             .environmentObject( Logger.sharedInstance)
     }
 }
+

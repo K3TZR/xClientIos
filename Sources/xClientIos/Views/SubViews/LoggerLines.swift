@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LogLines: View {
+struct LoggerLines: View {
     @EnvironmentObject var logger: Logger
     
     var body: some View {
@@ -16,15 +16,16 @@ struct LogLines: View {
                 ForEach(logger.logLines) { line in
                     Text(line.text)
                         .font(.system(size: CGFloat(logger.fontSize), weight: .regular, design: .monospaced))
-                    //                    .frame(minWidth: width, maxWidth: .infinity, alignment: .leading)
+                        
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
 
-struct LogLines_Previews: PreviewProvider {
+struct LoggerLines_Previews: PreviewProvider {
     static var previews: some View {
-        LogLines()
+        LoggerLines()
     }
 }
