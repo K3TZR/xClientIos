@@ -1,6 +1,6 @@
 ### xClientIos [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://en.wikipedia.org/wiki/MIT_License)
 
-#### iOS Client for use with xLib6000.
+#### Swift Package for use in an iOS Client. It provides the "boilerplate" capabilites needed by an iOS app communicating with a Flex 6000 radio using xLib6000.
 
 ##### Built on:
 
@@ -12,7 +12,7 @@
 * iOS 13 and higher
 
 ##### Builds
-Compiled  [RELEASE builds](https://github.com/K3TZR/xClientIos/releases) will be created at relatively stable points, please use them.  If you require a DEBUG build you will have to build from sources. 
+This is a Swift Package, no executables are created.
 
 ##### Comments / Questions
 Please send any bugs / comments / questions to support@k3tzr.net
@@ -29,7 +29,7 @@ Please send any bugs / comments / questions to support@k3tzr.net
 ---
 ##### 0.9.4 Release Notes
 * lots of changes to view formatting
-* added Email ability to LogView
+* added Email ability to LoggerView
 * added (basic) App Icon
 * many corrections throughout
 
