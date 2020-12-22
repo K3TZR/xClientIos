@@ -27,7 +27,13 @@ Please send any bugs / comments / questions to support@k3tzr.net
 [![W6OP](https://img.shields.io/badge/W6OP-xVoiceKeyer,_xCW-informational)](https://w6op.com) A Mac-based Voice Keyer and a CW Keyer.  
 
 ---
-##### 0.9.2 Release Notes
+##### 0.9.4 Release Notes
+* lots of changes to view formatting
+* added Email ability to LogView
+* added (basic) App Icon
+* many corrections throughout
+
+##### 0.9.3 Release Notes
 * changed SwiftyUserDefaults dependency  to "from 5.1.0" (new tag to fix iOS 8 warning)
 * updated to xLib6000 v1.6.7 (for iOS v14 requirement)
 * added KeychainItemAccessibility.swift & KeychainWrapper.swift (iOS keychain access)
@@ -36,10 +42,9 @@ Please send any bugs / comments / questions to support@k3tzr.net
 * changes in Logger.swift to supposrt iOS LogView
 * numerous changes in RadioManager.swift to support iOS
 * changes in WanManager to use iOS version of TokenStore
-* lots of changes to view formatting
-* added Email ability to LogView
-* added (basic) App Icon
-* many corrections throughout
+
+##### 0.9.2 Release Notes
+* changed SwiftyUserDefaults back to "from 5.0.0"
 
 ##### 0.9.1 Release Notes
 * uses newer xLIb6000 which uses newer CocoaAsyncSocket (7.6.5) to eliminate iOS 8 warning
