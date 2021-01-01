@@ -20,21 +20,21 @@ public struct StubView: View {
     public var body: some View {
         ZStack {
 //            EmptyView()
-//                .sheet(isPresented: $radioManager.showPickerSheet) {
-//                    PickerView()
-//                        .environmentObject(radioManager)
+//                .sheet(isPresented: $radioManager.showPickerView) {
+//                    PickerView().environmentObject(radioManager)
 //                }
             EmptyView()
-                .sheet(isPresented: $radioManager.showAuth0Sheet ) {
-                    Auth0View()
-                        .environmentObject(radioManager)
+                .sheet(isPresented: $radioManager.showAuth0View ) {
+                    Auth0View().environmentObject(radioManager)
                 }
+//            EmptyView()
+//                .multiAlert(isPresented: $radioManager.showMultiAlert, radioManager.currentMultiAlert)
         }
     }
 }
 
 public struct StubView_Previews: PreviewProvider {
     public static var previews: some View {
-        StubView(radioManager: RadioManager(delegate: MockRadioManagerDelegate(), domain: "net.k3tzr", appName: "xApi6000"))
+        StubView(radioManager: RadioManager(delegate: MockRadioManagerDelegate()))
     }
 }

@@ -37,11 +37,12 @@ public final class WanManager : WanServerDelegate {
     private weak var _serverDelegate          : WanServerDelegate?
     private weak var _radioManager            : RadioManager?
     
-    private let _appNameTrimmed               : String
+    private var _appName                      = ""
     private let _log                          = Logger.sharedInstance.logMessage
     private var _wanServer                    : WanServer?
     private var _previousToken                : Token?
     private var _state                        : String {String.random(length: 16)}
+    private let _tokenStore                   : TokenStore
     
     // constants
     private let kApplicationJson              = "application/json"
@@ -65,20 +66,13 @@ public final class WanManager : WanServerDelegate {
     private let kScope                        = "openid email given_name family_name picture"
     
     
-    
-    
-    private let _tokenStore : TokenStore
-    
-    
-    
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
-    init(radioManager: RadioManager, appNameTrimmed: String) {
+    init(radioManager: RadioManager) {
         _radioManager = radioManager
-        _appNameTrimmed = appNameTrimmed
-        _tokenStore = TokenStore(service: _appNameTrimmed + WanManager.kServiceName)
-        
+        _appName = (Bundle.main.infoDictionary!["CFBundleName"] as! String)
+        _tokenStore = TokenStore(service: _appName + WanManager.kServiceName)
         _wanServer = WanServer(delegate: self)
     }
     
@@ -89,15 +83,11 @@ public final class WanManager : WanServerDelegate {
     /// - Parameter auth0Email:     saved email address (if any)
     ///
     func smartLinkLogin(using auth0Email: String) -> Bool {
-        
         if let tokenValue = getToken(using: auth0Email) {
-            
             DispatchQueue.main.async { [self] in _radioManager!.smartLinkImage = getUserImage(tokenValue: tokenValue) }
-            
             // have a token, try to connect
-            return _wanServer!.connectToSmartLinkServer(appName: _appNameTrimmed, platform: kPlatform, token: tokenValue, ping: true)
+            return _wanServer!.connectToSmartLinkServer(appName: _appName, platform: kPlatform, token: tokenValue, ping: true)
         }
-        
         _log("Smartlink login: token NOT found", .debug,  #function, #file, #line)
         return false
     }
@@ -121,14 +111,14 @@ public final class WanManager : WanServerDelegate {
             }
         }
         // build the URL string
-        auth0UrlString =  """
-      \(RadioManager.kAuth0Domain)authorize?client_id=\(RadioManager.kAuth0ClientId)\
-      &redirect_uri=\(RadioManager.kRedirect)\
-      &response_type=\(RadioManager.kResponseType)\
-      &scope=\(RadioManager.kScope)\
-      &state=\(_state)\
-      &device=\(_appNameTrimmed)
-      """
+        auth0UrlString =    """
+                            \(RadioManager.kAuth0Domain)authorize?client_id=\(RadioManager.kAuth0ClientId)\
+                            &redirect_uri=\(RadioManager.kRedirect)\
+                            &response_type=\(RadioManager.kResponseType)\
+                            &scope=\(RadioManager.kScope)\
+                            &state=\(_state)\
+                            &device=\(_appName)
+                            """
     }
     
     /// Establish a SmartLink connection to a Radio
@@ -170,8 +160,6 @@ public final class WanManager : WanServerDelegate {
             _log("Smartlink login: using unexpired previous token", .debug,  #function, #file, #line)
             
         } else if auth0Email != "" {
-            
-            //      let service = _appNameTrimmed + WanManager.kServiceName
             
             // there is a saved email, is there is a saved Refresh Token?
             if let refreshToken = _tokenStore.get(account: auth0Email) {
@@ -395,10 +383,11 @@ public final class WanManager : WanServerDelegate {
                 // YES, save it
                 _radioManager!.delegate.smartLinkAuth0Email = email
                 
-                //        let service = _appNameTrimmed + WanManager.kServiceName
-                
                 // save the Refresh Token
-                _tokenStore.set(account: email, data: refreshToken)
+                if _tokenStore.set(account: email, data: refreshToken) == false {
+                    // log the error & exit
+                    _log("SmartLink login: error saving token", .warning,  #function, #file, #line)
+                }
             }
             // save the Log On picture (if any)
             claim = jwt.claim(name: kClaimPicture)
@@ -427,15 +416,13 @@ public final class WanManager : WanServerDelegate {
     /// Close the Auth0 sheet
     ///
     func closeAuth0LoginView() {
-        DispatchQueue.main.async { [self] in
-            _radioManager!.showAuth0Sheet = false
-            
-            // use the saved tokens to do a SmartLink Login
-            _radioManager!.smartLinkLogin()
-            
-            // display the RadioPicker
-            _radioManager!.showPicker()
-        }
+        _radioManager!.showAuth0(false)
+        
+        // use the saved tokens to do a SmartLink Login
+        _radioManager!.smartLinkLogin()
+        
+        // display the RadioPicker
+        _radioManager!.showPicker()
     }
     
     // ----------------------------------------------------------------------------
@@ -482,8 +469,7 @@ public final class WanManager : WanServerDelegate {
                 results.upnpUdpPortWorking == true &&
                 results.natSupportsHolePunch  == false)
         
-        DispatchQueue.main.async { [unowned self] in
-            let msg =
+        let msg =
                 """
                 Forward Tcp Port:  \(results.forwardTcpPortWorking)
                 Forward Udp Port:  \(results.forwardUdpPortWorking)
@@ -491,8 +477,7 @@ public final class WanManager : WanServerDelegate {
                 UPNP Udp Port:     \(results.upnpUdpPortWorking)
                 Nat Hole Punch:    \(results.natSupportsHolePunch)
                 """
-            _radioManager!.smartLinkTestResults(status: status, msg: msg)
-        }
+        _radioManager!.smartLinkTestResults(status: status, msg: msg)
     }
 }
 

@@ -18,7 +18,7 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/DaveWoodCom/XCGLogger.git", from: "7.0.1"),
         .package(url: "https://github.com/sunshinejr/SwiftyUserDefaults.git", from: "5.1.0"),
-        .package(url: "https://github.com/K3TZR/xLib6000.git", from: "1.6.7"),
+        .package(url: "https://github.com/K3TZR/xLib6000.git", from: "1.6.11"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.

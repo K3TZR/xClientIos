@@ -71,6 +71,8 @@ public class Logger : LogHandler, ObservableObject {
     @Published var showTimestamps   = false               { didSet{filterLog() }}
     @Published var fontSize         = 12
 
+    @Published var showLoadLogAlert = false
+
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
@@ -93,20 +95,14 @@ public class Logger : LogHandler, ObservableObject {
     ///
     public static var sharedInstance = Logger()
     
-    private init() {}
-    
-    /// Setup the Logger
-    /// - Parameters:
-    ///   - delegate:     an object conforming to the LoggerDelegate protocol
-    ///   - domain:       the app's domain
-    ///   - appName:      the app's name (no spaces)
-    ///
-    ///     NOTE: this must be called after the sharedInstance is created and before the Logger is used
-    ///
-    public func config(delegate: LoggerDelegate, domain: String, appName: String) {
-        self.delegate = delegate
-        self.domain = domain
-        self.appName = appName
+    private init() {
+        
+        let bundleId = Bundle.main.bundleIdentifier
+        let parts = bundleId?.split(separator: ".")
+        if let p = parts, p.count == 3 {
+            domain = String(p[0] + "." + p[1])
+            appName = String(p[2])
+        }
         
         _objectQ = DispatchQueue(label: appName + ".Logger.objectQ", attributes: [.concurrent])
         _log = XCGLogger(identifier: appName, includeDefaultDestinations: false)
@@ -231,32 +227,25 @@ public class Logger : LogHandler, ObservableObject {
     private var _logString          : String!
     private var _linesArray         = [String.SubSequence]()
     
+    public func backToMain() {
+        NotificationCenter.default.post(name: Notification.Name("showMainView"), object: nil)
+    }
+
     public func loadLog(at logUrl: URL? = nil) {
-        guard _initialized else { fatalError("Logger was not configured before first use.") }
         
         if let url = logUrl {
             // read it & populate the textView
             do {
                 logLines.removeAll()
-                
+
                 _logString = try String(contentsOf: url, encoding: .ascii)
                 _linesArray = _logString.split(separator: "\n")
                 openFileUrl = url
-                
+
                 filterLog()
-                
+
             } catch {
-                let alertParams = AlertParams(style: .warning,
-                                              title: "Unable to load Log",
-                                              message: """
-                                                Log file
-
-                                                \(url)
-
-                                                NOT found
-                                                """,
-                                              buttons: [("Cancel", nil)])
-                NotificationCenter.default.post(name: Notification.Name("showAlert"), object: alertParams)
+                DispatchQueue.main.async { self.showLoadLogAlert = true }
             }
         }
     }
@@ -266,17 +255,20 @@ public class Logger : LogHandler, ObservableObject {
         return try! Data(contentsOf: openFileUrl!)
     }
     
-    public func refresh() {
-        guard _initialized else { fatalError("Logger was not configured before first use.") }
+    public func refreshLog() {
         loadLog(at: openFileUrl)
+    }
+    
+    public func clearLog() {
+        _logString = ""
+        _linesArray = _logString.split(separator: "\n")
+        filterLog()
     }
         
     /// Filter the displayed Log
     /// - Parameter level:    log level
     ///
     func filterLog() {    
-        guard _initialized else { fatalError("Logger was not configured before first use.") }
-        
         var limitedLines    = [String.SubSequence]()
         var filteredLines   = [String.SubSequence]()
         

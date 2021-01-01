@@ -9,7 +9,7 @@
 *  Swift 5.3
 
 ##### Runs on:
-* iOS 13 and higher
+* iOS 13 and higher/Users/doug/Dropbox/Code/xClientIos/Sources/xClientIos/Supporting/JWT.swift
 
 ##### Builds
 This is a Swift Package, no executables are created.
@@ -27,6 +27,9 @@ Please send any bugs / comments / questions to support@k3tzr.net
 [![W6OP](https://img.shields.io/badge/W6OP-xVoiceKeyer,_xCW-informational)](https://w6op.com) A Mac-based Voice Keyer and a CW Keyer.  
 
 ---
+##### 0.9.5 Release Notes
+* continuing development
+
 ##### 0.9.4 Release Notes
 * lots of changes to view formatting
 * added Email ability to LoggerView
