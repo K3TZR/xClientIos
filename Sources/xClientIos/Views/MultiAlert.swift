@@ -19,27 +19,24 @@ extension UIAlertController {
     }
 }
 
-
 struct AlertWrapper<Content: View>: UIViewControllerRepresentable {
     @Binding var isPresented: Bool
     let alert: MultiAlert
     let content: Content
-    
-    func makeUIViewController(context: UIViewControllerRepresentableContext<AlertWrapper>) -> UIHostingController<Content> {
-        UIHostingController(rootView: content)
-    }
     
     final class Coordinator {
         var alertController: UIAlertController?
         init(_ controller: UIAlertController? = nil) {
             self.alertController = controller
         }
-        
-        
     }
     
     func makeCoordinator() -> Coordinator {
         return Coordinator()
+    }
+    
+    func makeUIViewController(context: UIViewControllerRepresentableContext<AlertWrapper>) -> UIHostingController<Content> {
+        UIHostingController(rootView: content)
     }
     
     func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: UIViewControllerRepresentableContext<AlertWrapper>) {
@@ -58,6 +55,8 @@ struct AlertWrapper<Content: View>: UIViewControllerRepresentable {
         }
     }
 }
+
+
 
 public struct MultiAlert {
     public var title        = ""

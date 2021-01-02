@@ -9,7 +9,7 @@ import SwiftUI
 
 
 struct LoggerTopButtons: View {
-    @EnvironmentObject var logger: Logger
+    @ObservedObject var logger: Logger
 
     var body: some View {
 
@@ -47,7 +47,7 @@ struct LoggerTopButtons: View {
 struct LoggerTopButtons_Previews: PreviewProvider {
 
     static var previews: some View {
-        LoggerTopButtons()
-            .environmentObject(Logger.sharedInstance)
+        LoggerTopButtons(logger: Logger.sharedInstance)
+//            .environmentObject(Logger.sharedInstance)
     }
 }

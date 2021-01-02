@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoggerLines: View {
-    @EnvironmentObject var logger: Logger
+    @ObservedObject var logger: Logger
     
     var body: some View {
         ScrollView([.horizontal, .vertical], showsIndicators: true) {
@@ -26,7 +26,7 @@ struct LoggerLines: View {
 struct LoggerLines_Previews: PreviewProvider {
 
     static var previews: some View {
-        LoggerLines()
-            .environmentObject(Logger.sharedInstance)
+        LoggerLines(logger: Logger.sharedInstance)
+//            .environmentObject(Logger.sharedInstance)
     }
 }

@@ -10,20 +10,20 @@ import SwiftUI
 /// A View to display the contents of the app's log
 ///
 public struct LoggerView: View {
-    @EnvironmentObject var logger: Logger
+    @StateObject var logger = Logger.sharedInstance
     
     public init() {}
     
     public var body: some View {
         
         VStack {
-            LoggerTopButtons()
+            LoggerTopButtons(logger: logger)
             Divider().frame(height: 2).background(Color(.opaqueSeparator))
 
-            LoggerLines()
+            LoggerLines(logger: logger)
             Divider().frame(height: 2).background(Color(.opaqueSeparator))
             
-            LoggerBottomButtons()
+            LoggerBottomButtons(logger: logger)
         }
         .onAppear() {
             // initialize Logger with the default log

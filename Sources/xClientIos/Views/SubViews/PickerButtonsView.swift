@@ -20,12 +20,10 @@ struct PickerButtonsView: View {
             
             Button("Cancel", action: {
                 presentationMode.wrappedValue.dismiss()
-                radioManager.closePicker()
             })
             
             Button("Connect", action: {
                 presentationMode.wrappedValue.dismiss()
-                radioManager.connect( to: radioManager.pickerSelection!)
             })
             .disabled(radioManager.pickerSelection == nil)
         }

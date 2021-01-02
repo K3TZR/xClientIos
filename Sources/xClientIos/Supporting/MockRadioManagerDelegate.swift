@@ -7,6 +7,7 @@
 
 import Foundation
 import xLib6000
+import SwiftUI
 
 class MockRadioManagerDelegate : RadioManagerDelegate {
         
@@ -24,7 +25,11 @@ class MockRadioManagerDelegate : RadioManagerDelegate {
     var smartLinkIsLoggedIn   = false
     var smartLinkTestStatus   = false
     var stationName           = "MockStation"
-    
+
+    var currentAlert          = Alert(title: Text("Mock Alert"))
+    var showCurrentAlert      = false
+    var showPickerView        = false
+
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     

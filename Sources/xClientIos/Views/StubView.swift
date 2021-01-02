@@ -11,30 +11,34 @@ import SwiftUI
 ///     allows display of the Picker and Auth0 sheets (supplied by xLibClient)
 ///
 public struct StubView: View {
-    @ObservedObject var radioManager: RadioManager
-
-    public init(radioManager: RadioManager) {
-        self.radioManager = radioManager
+//    let radioManager: RadioManager
+    
+    public init() {
     }
     
     public var body: some View {
-        ZStack {
-//            EmptyView()
-//                .sheet(isPresented: $radioManager.showPickerView) {
+        VStack {
+            EmptyView()
+//                .sheet(isPresented: $radioManager.showPickerView, onDismiss: { radioManager.connect(to: radioManager.pickerSelection) }) {
 //                    PickerView().environmentObject(radioManager)
 //                }
+            
+            
+            //            EmptyView()
+            //                .sheet(isPresented: $radioManager.showAuth0View ) {
+            //                    Auth0View().environmentObject(radioManager)
+            //                }
             EmptyView()
-                .sheet(isPresented: $radioManager.showAuth0View ) {
-                    Auth0View().environmentObject(radioManager)
-                }
-//            EmptyView()
-//                .multiAlert(isPresented: $radioManager.showMultiAlert, radioManager.currentMultiAlert)
+//                .alert(isPresented: $radioManager.showCurrentAlert, content: {
+//                    Alert(title: Text("Alert Title"))
+//                })
         }
     }
 }
 
 public struct StubView_Previews: PreviewProvider {
     public static var previews: some View {
-        StubView(radioManager: RadioManager(delegate: MockRadioManagerDelegate()))
+        StubView()
+        
     }
 }
