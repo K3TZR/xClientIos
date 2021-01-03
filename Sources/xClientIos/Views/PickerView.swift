@@ -12,8 +12,8 @@ import SwiftUI
 public struct PickerView: View {
   @EnvironmentObject var radioManager: RadioManager
   
-  public init() {
-  }
+    public init() {
+    }
     
     public var body: some View {
         VStack {
@@ -29,7 +29,7 @@ public struct PickerView: View {
 
             Divider()
             
-            if radioManager.delegate.enableSmartLink { SmartLinkView() }
+            if radioManager.enableSmartLink { SmartLinkView() }
             
             RadioListView()
             
@@ -45,7 +45,7 @@ public struct PickerView: View {
 struct PickerView_Previews: PreviewProvider {
 
     static var previews: some View {
-      PickerView()
-        .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
+        PickerView()
+            .environmentObject(RadioManager())
     }
 }

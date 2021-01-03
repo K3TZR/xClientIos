@@ -57,7 +57,7 @@ struct SmartLinkView: View {
                 }.sheet(isPresented: $radioManager.showAuth0View ) {
                     Auth0View().environmentObject(radioManager)
                 }
-                .disabled(!radioManager.delegate.enableSmartLink)
+                .disabled(!radioManager.enableSmartLink)
             }
             Divider()
         }
@@ -67,6 +67,6 @@ struct SmartLinkView: View {
 struct SmartLinkView_Previews: PreviewProvider {
     static var previews: some View {
         SmartLinkView()
-            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
+            .environmentObject(RadioManager())
     }
 }

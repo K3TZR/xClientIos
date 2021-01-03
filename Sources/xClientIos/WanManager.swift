@@ -381,7 +381,7 @@ public final class WanManager : WanServerDelegate {
             if let email = claim.string {
                 
                 // YES, save it
-                _radioManager!.delegate.smartLinkAuth0Email = email
+                _radioManager!.smartLinkAuth0Email = email
                 
                 // save the Refresh Token
                 if _tokenStore.set(account: email, data: refreshToken) == false {

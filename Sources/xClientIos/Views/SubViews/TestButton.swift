@@ -16,7 +16,7 @@ struct TestButton: View {
                 
         HStack {
             // only enable Test if a SmartLink connection is selected
-            let isEnabled = radioManager.delegate.enableSmartLink && radioManager.pickerSelection != nil && radioManager.pickerPackets[radioManager.pickerSelection!].type == .wan
+            let isEnabled = radioManager.enableSmartLink && radioManager.pickerSelection != nil && radioManager.pickerPackets[radioManager.pickerSelection!].type == .wan
             let alertText = "SmartLink Test \(radioManager.smartLinkTestStatus ? "SUCCESS" : "FAILURE")"
             let alertMessage = radioManager.smartLinkTestResults ?? ""
             
@@ -38,6 +38,6 @@ struct TestButton: View {
 struct TestButton_Previews: PreviewProvider {
     static var previews: some View {
         TestButton()
-            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
+            .environmentObject(RadioManager())
     }
 }

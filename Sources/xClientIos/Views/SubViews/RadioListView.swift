@@ -11,7 +11,6 @@ import SwiftUI
 ///
 struct RadioListView : View {
     @EnvironmentObject var radioManager : RadioManager
-//    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         
@@ -49,7 +48,7 @@ struct EmptyList: View {
             Spacer()
             HStack {
                 Spacer()
-                Text("---------- No \(radioManager.delegate.enableGui ? "Radios" : "Stations") found ----------")
+                Text("---------- No \(radioManager.enableGui ? "Radios" : "Stations") found ----------")
                     .foregroundColor(.red)
                 Spacer()
             }
@@ -81,7 +80,7 @@ struct PopulatedList: View {
             
             .contextMenu(menuItems: {
                 Button(action: { radioManager.setDefault(packet) }) {Text("Set as Default")}
-                Button(action: { radioManager.clearDefaults(suppressAlert: true) }) {Text("Reset Default")}
+                Button(action: { radioManager.clearDefaults() }) {Text("Reset Default")}
             })
         }
         .environment(\.editMode, .constant(EditMode.active))
@@ -92,6 +91,6 @@ struct RadioListView_Previews: PreviewProvider {
     
     static var previews: some View {
         RadioListView()
-            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
+            .environmentObject(RadioManager())
     }
 }

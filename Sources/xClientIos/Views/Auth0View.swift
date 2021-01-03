@@ -40,7 +40,8 @@ public struct Auth0View_Previews: PreviewProvider {
     
     public static var previews: some View {
         Auth0View()
-            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
+//            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
+            .environmentObject(RadioManager())
     }
 }
 

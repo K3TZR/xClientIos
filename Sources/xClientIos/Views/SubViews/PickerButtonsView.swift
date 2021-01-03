@@ -16,7 +16,6 @@ struct PickerButtonsView: View {
     var body: some View {
         HStack (spacing: 120){
             TestButton()
-                .environmentObject(radioManager)
             
             Button("Cancel", action: {
                 presentationMode.wrappedValue.dismiss()
@@ -33,6 +32,6 @@ struct PickerButtonsView: View {
 struct PickerButtonsView_Previews: PreviewProvider {
     static var previews: some View {
         PickerButtonsView()
-            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
+            .environmentObject(RadioManager())
     }
 }

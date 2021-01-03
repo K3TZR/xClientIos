@@ -7,6 +7,14 @@
 
 import Foundation
 
+
+public enum ClientIosNotificationType : String {
+    case ClientIdWasAssigned
+    case defaultsWereChanged
+    case showMainView
+    case smartLinkEmailUpdated
+}
+
 extension String {
     var expandingTilde: String { NSString(string: self).expandingTildeInPath }
 }
