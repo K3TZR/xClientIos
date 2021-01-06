@@ -10,11 +10,15 @@ import SwiftUI
 /// Image, textfields and button for the SmartLink portion of the Picker
 ///   only shown if SmartLink is enabled
 ///
-struct SmartLinkView: View {
+public struct SmartLinkView: View {
     @EnvironmentObject var radioManager : RadioManager
     @Environment(\.presentationMode) var presentationMode
     
-    var body: some View {
+    public init() {
+        
+    }
+        
+    public var body: some View {
         
         VStack {
             HStack (spacing: 30) {
@@ -57,7 +61,7 @@ struct SmartLinkView: View {
                 }.sheet(isPresented: $radioManager.showAuth0View ) {
                     Auth0View().environmentObject(radioManager)
                 }
-                .disabled(!radioManager.enableSmartLink)
+                .disabled(!radioManager.delegate.enableSmartLink)
             }
             Divider()
         }
@@ -67,6 +71,6 @@ struct SmartLinkView: View {
 struct SmartLinkView_Previews: PreviewProvider {
     static var previews: some View {
         SmartLinkView()
-            .environmentObject(RadioManager())
+            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
     }
 }

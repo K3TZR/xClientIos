@@ -9,19 +9,23 @@ import SwiftUI
 import UIKit
 
 extension UIAlertController {
-    convenience init(alert: MultiAlert) {
+    
+    convenience init(alert: MultiAlertParams) {
         self.init(title: alert.title, message: alert.message, preferredStyle: .alert)
-        for (i, button) in alert.buttons.enumerated() {
-            addAction(UIAlertAction(title: button, style: .default) { _ in
-                alert.action(i)
-            })
+        
+        for button in alert.buttons {
+            let alertAction = UIAlertAction(title: button.text, style: button.text == "Cancel" ? .cancel : .default) { _ in
+                button.method()
+            }
+            alertAction.setValue(button.color, forKey: "titleTextColor")
+            addAction(alertAction)
         }
     }
 }
 
-struct AlertWrapper<Content: View>: UIViewControllerRepresentable {
+struct MultiAlertWrapper<Content: View>: UIViewControllerRepresentable {
     @Binding var isPresented: Bool
-    let alert: MultiAlert
+    let alert: MultiAlertParams
     let content: Content
     
     final class Coordinator {
@@ -35,17 +39,19 @@ struct AlertWrapper<Content: View>: UIViewControllerRepresentable {
         return Coordinator()
     }
     
-    func makeUIViewController(context: UIViewControllerRepresentableContext<AlertWrapper>) -> UIHostingController<Content> {
+    func makeUIViewController(context: UIViewControllerRepresentableContext<MultiAlertWrapper>) -> UIHostingController<Content> {
         UIHostingController(rootView: content)
     }
     
-    func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: UIViewControllerRepresentableContext<AlertWrapper>) {
+    func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: UIViewControllerRepresentableContext<MultiAlertWrapper>) {
         uiViewController.rootView = content
         if isPresented && uiViewController.presentedViewController == nil {
             var alert = self.alert
-            alert.action = {
-                self.isPresented = false
-                self.alert.action($0)
+            for (i, button) in alert.buttons.enumerated() {
+                alert.buttons[i].method = {
+                    self.isPresented = false
+                    button.method()
+                }
             }
             context.coordinator.alertController = UIAlertController(alert: alert)
             uiViewController.present(context.coordinator.alertController!, animated: true)
@@ -58,15 +64,16 @@ struct AlertWrapper<Content: View>: UIViewControllerRepresentable {
 
 
 
-public struct MultiAlert {
+public typealias MultiAlertButton = (text: String, color: UIColor, method: () -> Void )
+
+public struct MultiAlertParams {
     public var title        = ""
     public var message      = ""
-    public var buttons      = [String]()
-    public var action       : (Int) -> () = { _ in }
+    public var buttons      = [MultiAlertButton]()
 }
 
 extension View {
-    public func multiAlert(isPresented: Binding<Bool>, _ alert: MultiAlert) -> some View {
-        AlertWrapper(isPresented: isPresented, alert: alert, content: self)
+    public func multiAlert(isPresented: Binding<Bool>, _ alert: MultiAlertParams) -> some View {
+        MultiAlertWrapper(isPresented: isPresented, alert: alert, content: self)
     }
 }

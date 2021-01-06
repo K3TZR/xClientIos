@@ -48,7 +48,7 @@ struct EmptyList: View {
             Spacer()
             HStack {
                 Spacer()
-                Text("---------- No \(radioManager.enableGui ? "Radios" : "Stations") found ----------")
+                Text("---------- No \(radioManager.delegate.enableGui ? "Radios" : "Stations") found ----------")
                     .foregroundColor(.red)
                 Spacer()
             }
@@ -78,10 +78,11 @@ struct PopulatedList: View {
             }
             .foregroundColor( packetColor(packet) )
             
-            .contextMenu(menuItems: {
-                Button(action: { radioManager.setDefault(packet) }) {Text("Set as Default")}
-                Button(action: { radioManager.clearDefaults() }) {Text("Reset Default")}
-            })
+//            .contextMenu(menuItems: {
+//                Button(action: { radioManager.setDefault() }) {Text("Set as Default")}
+//                Button(action: { radioManager.defaultToFirstFound() }) {Text("Default to first found")}
+//                Button(action: { radioManager.clearDefaults() }) {Text("Clear Default")}
+//            })
         }
         .environment(\.editMode, .constant(EditMode.active))
     }
@@ -91,6 +92,6 @@ struct RadioListView_Previews: PreviewProvider {
     
     static var previews: some View {
         RadioListView()
-            .environmentObject(RadioManager())
+            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate()))
     }
 }

@@ -29,7 +29,7 @@ public struct PickerView: View {
 
             Divider()
             
-            if radioManager.enableSmartLink { SmartLinkView() }
+//            if radioManager.enableSmartLink { SmartLinkView() }
             
             RadioListView()
             
@@ -37,6 +37,7 @@ public struct PickerView: View {
             
             PickerButtonsView()
         }
+        .onDisappear(perform: {radioManager.showPickerView = false} )
         .padding(.horizontal, 20)
         .padding(.vertical, 20)
     }
@@ -46,6 +47,6 @@ struct PickerView_Previews: PreviewProvider {
 
     static var previews: some View {
         PickerView()
-            .environmentObject(RadioManager())
+            .environmentObject(RadioManager(delegate: MockRadioManagerDelegate() ))
     }
 }
