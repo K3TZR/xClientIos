@@ -1,6 +1,6 @@
 //
 //  Logger.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 3/4/20.
 //  Copyright © 2020 Douglas Adams. All rights reserved.

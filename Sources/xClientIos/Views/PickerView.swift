@@ -1,6 +1,6 @@
 //
 //  PickerView.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 8/15/20.
 //
@@ -10,41 +10,34 @@ import SwiftUI
 /// A View to allow the user to select a Radio / Station for connection
 ///
 public struct PickerView: View {
-  @EnvironmentObject var radioManager: RadioManager
-  
+    @EnvironmentObject var radioManager: RadioManager
+    
     public init() {
     }
     
     public var body: some View {
         VStack {
-            
-            if radioManager.pickerMessage != "" {
-                Text(radioManager.pickerMessage).foregroundColor(.red)
-                Text("")
-            } else {
-                EmptyView()
-            }
+            VStack (spacing: 20) {
+                ForEach(radioManager.pickerMessages, id: \.self) { message in
+                    Text(message).foregroundColor(.red)
+                }
+            }.padding(.bottom, 20)
             
             Text(radioManager.pickerHeading)
-
+            
             Divider()
-            
-//            if radioManager.enableSmartLink { SmartLinkView() }
-            
             RadioListView()
             
             Divider()
-            
             PickerButtonsView()
         }
-        .onDisappear(perform: {radioManager.showPickerView = false} )
         .padding(.horizontal, 20)
         .padding(.vertical, 20)
     }
 }
 
 struct PickerView_Previews: PreviewProvider {
-
+    
     static var previews: some View {
         PickerView()
             .environmentObject(RadioManager(delegate: MockRadioManagerDelegate() ))

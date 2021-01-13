@@ -1,6 +1,6 @@
 //
 //  LoggerHeader.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 12/19/20.
 //
@@ -17,11 +17,10 @@ struct LoggerBottomButtons: View {
     @State private var mailFailed = false
 
     var body: some View {
-        HStack {
+        HStack (spacing: 40) {
             Stepper("Font Size", value: $logger.fontSize, in: 8...24).frame(width: 175)
             
             Spacer()
-            
             Button("Email", action: {
                 if MFMailComposeViewController.canSendMail() {
                     self.isShowingMailView.toggle()
@@ -42,10 +41,7 @@ struct LoggerBottomButtons: View {
                     composer.addAttachmentData(logger.getLogData()!, mimeType: "txt/plain", fileName: "\(logger.appName)Log.txt")
                 }
             }
-            
-            Spacer()
-            
-            HStack (spacing: 20) {
+            HStack (spacing: 40) {
                 Button("Refresh", action: {logger.refreshLog() })
                 Button("Load", action: {logger.loadLog() })
                     .alert(isPresented: $logger.showLoadLogAlert) {
@@ -54,14 +50,10 @@ struct LoggerBottomButtons: View {
                               dismissButton: .cancel(Text("Cancel")))
                     }
             }
-            
-            Spacer()
-            
             Button("Clear", action: {logger.clearLog() })
             
             Spacer()
-            
-            Button(action: {logger.backToMain() }) {Text("Back to Main")}
+            Button("Back to Main", action: {logger.backToMain() })
         }
     }
 }
@@ -70,7 +62,6 @@ struct LoggerBottomButtons_Previews: PreviewProvider {
     
     static var previews: some View {
         LoggerBottomButtons(logger: Logger.sharedInstance)
-//            .environmentObject(Logger.sharedInstance)
     }
 }
 

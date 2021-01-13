@@ -1,6 +1,6 @@
 //
 //  PickerButtonsView.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 8/13/20.
 //
@@ -16,14 +16,11 @@ struct PickerButtonsView: View {
     var body: some View {
         HStack (spacing: 120){
             TestButton()
-            
             Button("Cancel", action: {
-                presentationMode.wrappedValue.dismiss()
+                    radioManager.pickerSelection = nil
+                    presentationMode.wrappedValue.dismiss()
             })
-            
-            Button("Connect", action: {
-                presentationMode.wrappedValue.dismiss()
-            })
+            Button("Connect", action: { presentationMode.wrappedValue.dismiss() })
             .disabled(radioManager.pickerSelection == nil)
         }
     }

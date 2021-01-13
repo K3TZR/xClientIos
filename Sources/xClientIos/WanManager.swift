@@ -1,6 +1,6 @@
 //
 //  WanManager.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 5/5/20.
 //  Copyright © 2020 Douglas Adams. All rights reserved.
@@ -62,7 +62,7 @@ public final class WanManager : WanServerDelegate {
     private let kKeyScope                     = "scope"
     private let kKeyTarget                    = "target"
     
-    private let kPlatform                     = "macOS"
+    private let kPlatform                     = "iOS"
     private let kScope                        = "openid email given_name family_name picture"
     
     
@@ -119,6 +119,22 @@ public final class WanManager : WanServerDelegate {
                             &state=\(_state)\
                             &device=\(_appName)
                             """
+
+        auth0UrlString =    """
+                            https://frtest.auth0.com/authorize?client_id=4Y9fEIIsVYyQo5u6jr7yBWc4lV5ugC2m\
+                            &redirect_uri=https://frtest.auth0.com/mobile\
+                            &response_type=token\
+                            &scope=openid%20offline_access%20email%20given_name%20family_name%20picture\
+                            &state=\(_state)\
+                            &device=\(_appName)
+                            """
+
+
+
+
+
+
+
     }
     
     /// Establish a SmartLink connection to a Radio
@@ -381,7 +397,7 @@ public final class WanManager : WanServerDelegate {
             if let email = claim.string {
                 
                 // YES, save it
-                _radioManager!.smartLinkAuth0Email = email
+                _radioManager!.delegate.smartLinkAuth0Email = email
                 
                 // save the Refresh Token
                 if _tokenStore.set(account: email, data: refreshToken) == false {

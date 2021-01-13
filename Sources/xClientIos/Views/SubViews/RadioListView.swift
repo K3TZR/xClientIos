@@ -1,6 +1,6 @@
 //
 //  RadioListView.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 8/13/20.
 //
@@ -77,12 +77,6 @@ struct PopulatedList: View {
                 Text(packet.stations).frame(width: 100, alignment: .leading)
             }
             .foregroundColor( packetColor(packet) )
-            
-//            .contextMenu(menuItems: {
-//                Button(action: { radioManager.setDefault() }) {Text("Set as Default")}
-//                Button(action: { radioManager.defaultToFirstFound() }) {Text("Default to first found")}
-//                Button(action: { radioManager.clearDefaults() }) {Text("Clear Default")}
-//            })
         }
         .environment(\.editMode, .constant(EditMode.active))
     }

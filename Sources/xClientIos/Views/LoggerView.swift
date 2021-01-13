@@ -1,6 +1,6 @@
 //
 //  LoggerView.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 10/10/20.
 //
@@ -16,7 +16,7 @@ public struct LoggerView: View {
     
     public var body: some View {
         
-        VStack {
+        VStack (alignment: .leading){
             LoggerTopButtons(logger: logger)
             Divider().frame(height: 2).background(Color(.opaqueSeparator))
 

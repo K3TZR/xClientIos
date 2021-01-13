@@ -1,6 +1,6 @@
 //
 //  SmartLinkView.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 8/13/20.
 //
@@ -14,9 +14,7 @@ public struct SmartLinkView: View {
     @EnvironmentObject var radioManager : RadioManager
     @Environment(\.presentationMode) var presentationMode
     
-    public init() {
-        
-    }
+    public init() {}
         
     public var body: some View {
         
@@ -51,17 +49,12 @@ public struct SmartLinkView: View {
                         .border(Color(.placeholderText))
                 }.disabled(true)
                 
-                Button(action: {
+                Button(radioManager.smartLinkIsLoggedIn ? "Logout" : "Login", action: {
                     presentationMode.wrappedValue.dismiss()
                     DispatchQueue.main.async { [self] in
                         if radioManager.smartLinkIsLoggedIn {radioManager.smartLinkLogout() } else {radioManager.smartLinkLogin()}
                     }
-                }) {Text(radioManager.smartLinkIsLoggedIn ? "Logout" : "Login")
-                    
-                }.sheet(isPresented: $radioManager.showAuth0View ) {
-                    Auth0View().environmentObject(radioManager)
-                }
-                .disabled(!radioManager.delegate.enableSmartLink)
+                }).disabled(!radioManager.delegate.enableSmartLink)
             }
             Divider()
         }

@@ -1,6 +1,6 @@
 //
 //  TestButton.swift
-//  xClientMac package
+//  xClientIos
 //
 //  Created by Douglas Adams on 8/15/20.
 //
@@ -20,7 +20,7 @@ struct TestButton: View {
             let alertText = "SmartLink Test \(radioManager.smartLinkTestStatus ? "SUCCESS" : "FAILURE")"
             let alertMessage = radioManager.smartLinkTestResults ?? ""
             
-            Button(action: { radioManager.smartLinkTest() }) {Text("Test")}
+            Button("Test", action: { radioManager.smartLinkTest() })
                 .disabled(isEnabled == false)
                 .padding(.horizontal, 20)
                 .alert(isPresented: $radioManager.smartLinkTestStatus ) {

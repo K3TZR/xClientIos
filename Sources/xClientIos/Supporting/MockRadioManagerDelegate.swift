@@ -1,6 +1,6 @@
 //
 //  MockRadioManagerDelegate.swift
-//  xClientIos package
+//  xClientIos
 //
 //  Created by Douglas Adams on 9/5/20.
 //
@@ -19,6 +19,7 @@ class MockRadioManagerDelegate : RadioManagerDelegate {
     var defaultGuiConnection  = ""
     var enableGui             = true
     var enableSmartLink       = true
+    var smartLinkAuth0Email   = ""
     var stationName           = "MockStation"
 
     // ----------------------------------------------------------------------------
