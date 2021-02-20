@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import xLib6000
 import WebKit
+import JWTDecode
 
 public typealias DefaultsTuple = (defaultConnection: String, defaultGuiConnection: String, connectToFirstRadio: Bool)
 
@@ -116,7 +117,7 @@ public final class RadioManager : ObservableObject {
     
     @Published public var activePacket          : DiscoveryPacket?
     @Published public var activeRadio           : Radio?
-    @Published public var activeSheet           : SheetType?   = nil
+    @Published public var activeSheet           : SheetType? = nil
     @Published public var alertParams           = AlertParams()
     @Published public var isConnected           = false
     @Published public var pickerHeading         = ""
@@ -135,8 +136,6 @@ public final class RadioManager : ObservableObject {
 
     public var wkWebView = WKWebView()
     
-
-    
     public var currentAlert                     = MultiParams(title: "MultiAlert", message: "message", buttons: [MultiButton(text: "Button", method: {})])
     public var delegate                         : RadioManagerDelegate!
     public var sheetType                        : SheetType = .picker
@@ -145,6 +144,7 @@ public final class RadioManager : ObservableObject {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
+    var auth0Manager    : Auth0Manager?
     var wanManager      : WanManager?
     var packets         : [DiscoveryPacket] { Discovery.sharedInstance.discoveryPackets }
     
@@ -175,11 +175,14 @@ public final class RadioManager : ObservableObject {
             // NO, assign one
             self.delegate.clientId = UUID().uuidString
         }
+        // if SmartLink enabled, start the Auth0 Manager
+        if delegate.enableSmartLink { auth0Manager = Auth0Manager() }
+        
         // if SmartLink enabled, are we logged in?
-        if delegate.enableSmartLink && smartLinkIsLoggedIn == false {
-            // NO, attempt tp log in
-            smartLinkLogin(suppressPicker: true)
-        }
+//        if delegate.enableSmartLink && smartLinkIsLoggedIn == false {
+//            // NO, attempt to log in
+//            smartLinkLogin(suppressPicker: true)
+//        }
     }
     
     // ----------------------------------------------------------------------------
@@ -407,10 +410,60 @@ public final class RadioManager : ObservableObject {
         if smartLinkIsLoggedIn {
             smartLinkLogout()
         } else {
-            smartLinkLogin()
+            if let idToken = auth0Manager?.getIdToken() {
+                print("----->>>>> Retrieved ID Token \n" + idToken)
+
+                if wanManager == nil { wanManager = WanManager(radioManager: self) }
+
+                // try to connect to SmartLink
+                if wanManager!.smartLinkLogin(using: idToken) {
+                    DispatchQueue.main.async { [self] in
+                        smartLinkIsLoggedIn = true
+                        showPicker()
+                    }
+                }
+            } else {
+                // cause the sheet to appear
+                showAuth0()
+            }
         }
     }
    
+    
+    public func smartLinkLogin(user: String, pwd: String) {
+        
+        if wanManager == nil { wanManager = WanManager(radioManager: self) }
+        
+        // use Auth0 to authenticate the user/pwd
+        auth0Manager?.authenticateWith(user: user, pwd: pwd) { [self] result in
+            
+            switch result {
+            case .success(let credentials):
+                
+                
+//                let jwt = try? decode(jwt: credentials.idToken!)
+
+//                print(jwt)
+                
+                if let idToken = credentials.idToken {
+                    // try to connect to SmartLink
+                    if wanManager!.smartLinkLogin(using: idToken) {
+                        DispatchQueue.main.async { [self] in
+                            smartLinkIsLoggedIn = true
+                            showPicker()
+                        }
+                    }
+                }
+            case .failure:
+                // FIXME:
+                fatalError()
+            }
+        }
+    }
+    
+    
+    
+    
     /// Initiate a Login to the SmartLink server
     ///
     public func smartLinkLogin(suppressPicker: Bool = false) {
