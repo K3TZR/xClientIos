@@ -14,13 +14,15 @@ struct PickerButtonsView: View {
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
-        HStack (spacing: 120){
+        HStack(spacing: 40){
             TestButton()
-            Button("Cancel", action: {
-                    radioManager.pickerSelection = nil
-                    presentationMode.wrappedValue.dismiss()
-            })
-            Button("Connect", action: { presentationMode.wrappedValue.dismiss() })
+            Button("Cancel") {
+                radioManager.pickerSelection = nil
+                presentationMode.wrappedValue.dismiss()
+            }
+            Button("Connect") {
+                presentationMode.wrappedValue.dismiss()
+            }
             .disabled(radioManager.pickerSelection == nil)
         }
     }

@@ -9,7 +9,7 @@ import SwiftUI
 import MessageUI
 
 struct LoggerBottomButtons: View {
-    @ObservedObject var logger: Logger
+    @EnvironmentObject var logger: Logger
 
     @State private var result: Result<MFMailComposeResult, Error>? = nil
     @State private var isShowingMailView = false
@@ -61,7 +61,8 @@ struct LoggerBottomButtons: View {
 struct LoggerBottomButtons_Previews: PreviewProvider {
     
     static var previews: some View {
-        LoggerBottomButtons(logger: Logger.sharedInstance)
+        LoggerBottomButtons()
+            .environmentObject(Logger.sharedInstance)
     }
 }
 

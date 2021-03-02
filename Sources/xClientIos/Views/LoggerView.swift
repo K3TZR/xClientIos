@@ -10,21 +10,24 @@ import SwiftUI
 /// A View to display the contents of the app's log
 ///
 public struct LoggerView: View {
-    @StateObject var logger = Logger.sharedInstance
+    @EnvironmentObject var logger : Logger
     
     public init() {}
     
     public var body: some View {
         
-        VStack (alignment: .leading){
-            LoggerTopButtons(logger: logger)
-            Divider().frame(height: 2).background(Color(.opaqueSeparator))
+        VStack {
+            LoggerTopButtons()
+            Divider().frame(height: 2).background(Color(.separator))
 
-            LoggerLines(logger: logger)
-            Divider().frame(height: 2).background(Color(.opaqueSeparator))
+            LoggerLines()
+            Divider().frame(height: 2).background(Color(.separator))
             
-            LoggerBottomButtons(logger: logger)
+            LoggerBottomButtons()
         }
+        .frame(minWidth: 700)
+        .padding(.horizontal)
+        .padding(.vertical, 10)
         .onAppear() {
             // initialize Logger with the default log
             let defaultLogUrl = URL(fileURLWithPath: URL.appSupport.path + "/" + logger.domain + "." + logger.appName + "/Logs/" + logger.appName + ".log")

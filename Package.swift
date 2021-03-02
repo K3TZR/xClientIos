@@ -19,7 +19,7 @@ let package = Package(
         .package(name: "XCGLogger", url: "https://github.com/DaveWoodCom/XCGLogger.git", from: "7.0.1"),
         .package(name: "SwiftyUserDefaults", url: "https://github.com/sunshinejr/SwiftyUserDefaults.git", from: "5.1.0"),
         .package(name: "xLib6000", url: "https://github.com/K3TZR/xLib6000.git", from: "1.6.15"),
-        .package(name: "Auth0", url: "https://github.com/auth0/Auth0.swift.git", from: "1.30.1"),
+        .package(name: "JWTDecode", url: "https://github.com/auth0/JWTDecode.swift.git", from: "2.6.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -30,7 +30,7 @@ let package = Package(
                 "XCGLogger",
                 "xLib6000",
                 "SwiftyUserDefaults",
-                "Auth0",
+                "JWTDecode",
             ],
             resources: [.process("Resources/Auth0.plist")]),
         .testTarget(

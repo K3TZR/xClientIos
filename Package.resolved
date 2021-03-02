@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "Auth0",
-        "repositoryURL": "https://github.com/auth0/Auth0.swift.git",
-        "state": {
-          "branch": null,
-          "revision": "e9a4a6a41dda385eb34e7dac32aa39db64ad5f22",
-          "version": "1.30.1"
-        }
-      },
-      {
         "package": "CocoaAsyncSocket",
         "repositoryURL": "https://github.com/robbiehanson/CocoaAsyncSocket",
         "state": {
@@ -42,8 +33,8 @@
         "repositoryURL": "https://github.com/auth0/JWTDecode.swift.git",
         "state": {
           "branch": null,
-          "revision": "ee8c8edcb966a8fa123a25532ed3f189371da739",
-          "version": "2.5.0"
+          "revision": "3985f68dec94c7d7148d9821abb65cf0c508e9f2",
+          "version": "2.6.0"
         }
       },
       {
@@ -56,15 +47,6 @@
         }
       },
       {
-        "package": "OHHTTPStubs",
-        "repositoryURL": "https://github.com/AliSoftware/OHHTTPStubs.git",
-        "state": {
-          "branch": null,
-          "revision": "12f19662426d0434d6c330c6974d53e2eb10ecd9",
-          "version": "9.1.0"
-        }
-      },
-      {
         "package": "Quick",
         "repositoryURL": "https://github.com/Quick/Quick.git",
         "state": {
@@ -74,20 +56,11 @@
         }
       },
       {
-        "package": "SimpleKeychain",
-        "repositoryURL": "https://github.com/auth0/SimpleKeychain.git",
-        "state": {
-          "branch": null,
-          "revision": "d1ec816cbe4afd2ed54591bc53fe281f778e5c3b",
-          "version": "0.12.1"
-        }
-      },
-      {
         "package": "SwiftyUserDefaults",
         "repositoryURL": "https://github.com/sunshinejr/SwiftyUserDefaults.git",
         "state": {
           "branch": null,
-          "revision": "28c8805314e67683f727c3376e69cbd4b8b590bb",
+          "revision": "6c65d48296880db837afbaf28198392e416e58ef",
           "version": "5.1.0"
         }
       },

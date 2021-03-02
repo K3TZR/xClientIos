@@ -1,5 +1,5 @@
 //
-//  PickerView.swift
+//  RadioPickerView.swift
 //  xClientIos
 //
 //  Created by Douglas Adams on 8/15/20.
@@ -9,7 +9,7 @@ import SwiftUI
 
 /// A View to allow the user to select a Radio / Station for connection
 ///
-public struct PickerView: View {
+public struct RadioPickerView: View {
     @EnvironmentObject var radioManager: RadioManager
     
     public init() {
@@ -36,10 +36,10 @@ public struct PickerView: View {
     }
 }
 
-struct PickerView_Previews: PreviewProvider {
+struct RadioPickerView_Previews: PreviewProvider {
     
     static var previews: some View {
-        PickerView()
+        RadioPickerView()
             .environmentObject(RadioManager(delegate: MockRadioManagerDelegate() ))
     }
 }

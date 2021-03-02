@@ -16,21 +16,15 @@ struct TestButton: View {
                 
         HStack {
             // only enable Test if a SmartLink connection is selected
-            let isEnabled = radioManager.delegate.enableSmartLink && radioManager.pickerSelection != nil && radioManager.pickerPackets[radioManager.pickerSelection!].type == .wan
-            let alertText = "SmartLink Test \(radioManager.smartLinkTestStatus ? "SUCCESS" : "FAILURE")"
-            let alertMessage = radioManager.smartLinkTestResults ?? ""
+            let testDisabled = !radioManager.delegate.smartlinkEnabled || radioManager.pickerSelection == nil || radioManager.pickerPackets[radioManager.pickerSelection!].type != .wan
             
-            Button("Test", action: { radioManager.smartLinkTest() })
-                .disabled(isEnabled == false)
-                .padding(.horizontal, 20)
-                .alert(isPresented: $radioManager.smartLinkTestStatus ) {
-                    Alert(title: Text(alertText), message: Text(alertMessage), dismissButton: .default(Text("Ok")))
-                }
+            Button("Test") {
+                    radioManager.smartlinkTest()
+            }.disabled(testDisabled)
 
             Circle()
-                .fill(radioManager.smartLinkTestStatus ? Color.green : Color.red)
+                .fill(radioManager.smartlinkTestStatus ? Color.green : Color.red)
                 .frame(width: 20, height: 20)
-                .padding(.trailing, 20)
         }
     }
 }

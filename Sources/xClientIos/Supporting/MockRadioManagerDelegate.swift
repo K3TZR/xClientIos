@@ -5,27 +5,28 @@
 //  Created by Douglas Adams on 9/5/20.
 //
 
-import Foundation
-import SwiftUI
+import UIKit
+import xLib6000
 
-class MockRadioManagerDelegate : RadioManagerDelegate {
-        
+class MockRadioManagerDelegate: RadioManagerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var clientId              = UUID().uuidString
+    var clientId: String?
     var connectToFirstRadio   = false
-    var defaultConnection     = ""
-    var defaultGuiConnection  = ""
+    var defaultConnection: String?
+    var defaultGuiConnection: String?
     var enableGui             = true
-    var enableSmartLink       = true
-    var smartLinkAuth0Email   = ""
+    var smartlinkAuth0Email: String?
+    var smartlinkEnabled      = true
+    var smartlinkIsLoggedIn   = true
+    var smartlinkUserImage: UIImage?
     var stationName           = "MockStation"
 
+    var activePacket: DiscoveryPacket?
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
     func willConnect() {}
     func willDisconnect() {}
 }
-
